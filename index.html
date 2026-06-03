@@ -152,6 +152,19 @@
       stroke-width: 1.8;
     }
 
+    .wand-sparkles {
+      fill: currentColor;
+      stroke: none;
+    }
+
+    .wand-stick {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
     .editor-shell {
       position: relative;
       width: 100%;
@@ -1360,9 +1373,15 @@
     <nav class="source-rail" aria-label="Writing assistance">
       <button class="rail-btn" id="railChat" type="button" title="Open Chat Box">
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="m14 4 1.3 2.8L18 8l-2.7 1.2L14 12l-1.2-2.8L10 8l2.8-1.2L14 4Z"/>
-          <path d="M6 17 17 6" stroke-linecap="round"/>
-          <path d="m5 6 .7 1.5L7 8l-1.3.5L5 10l-.6-1.5L3 8l1.4-.5L5 6Zm14 8 .8 1.8 1.7.7-1.7.7L19 19l-.8-1.8-1.7-.7 1.7-.7L19 14Z"/>
+          <g class="wand-sparkles">
+            <path d="M6.2 2.8 7.5 6l3.2 1.3-3.2 1.3-1.3 3.2-1.3-3.2-3.2-1.3L4.9 6l1.3-3.2Z"/>
+            <path d="M17.5 2.2 18.6 5l2.8 1.1-2.8 1.1-1.1 2.8-1.1-2.8-2.8-1.1L16.4 5l1.1-2.8Z"/>
+            <path d="M18.1 14.2 19.3 17l2.8 1.2-2.8 1.2-1.2 2.8-1.2-2.8-2.8-1.2 2.8-1.2 1.2-2.8Z"/>
+          </g>
+          <path class="wand-stick" d="M4.8 19.2 15.4 8.6"/>
+          <path class="wand-stick" d="M7.3 21.7 17.9 11.1"/>
+          <path class="wand-stick" d="M4.8 19.2a1.8 1.8 0 0 0 2.5 2.5"/>
+          <path class="wand-stick" d="M15.4 8.6a1.8 1.8 0 0 1 2.5 2.5"/>
         </svg>
       </button>
       <button class="rail-btn" id="railHistory" type="button" title="Open Chat History">
@@ -1378,9 +1397,15 @@
       <div class="chat-head">
         <svg class="wand" viewBox="0 0 24 24" aria-hidden="true">
           <g class="chat-wand-icon">
-            <path d="m14 4 1.3 2.8L18 8l-2.7 1.2L14 12l-1.2-2.8L10 8l2.8-1.2L14 4Z" fill="none" stroke="currentColor" stroke-width="1.6"/>
-            <path d="M6 17 17 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <path d="m5 6 .7 1.5L7 8l-1.3.5L5 10l-.6-1.5L3 8l1.4-.5L5 6Zm14 8 .8 1.8 1.7.7-1.7.7L19 19l-.8-1.8-1.7-.7 1.7-.7L19 14Z" fill="none" stroke="currentColor" stroke-width="1.4"/>
+            <g class="wand-sparkles">
+              <path d="M6.2 2.8 7.5 6l3.2 1.3-3.2 1.3-1.3 3.2-1.3-3.2-3.2-1.3L4.9 6l1.3-3.2Z"/>
+              <path d="M17.5 2.2 18.6 5l2.8 1.1-2.8 1.1-1.1 2.8-1.1-2.8-2.8-1.1L16.4 5l1.1-2.8Z"/>
+              <path d="M18.1 14.2 19.3 17l2.8 1.2-2.8 1.2-1.2 2.8-1.2-2.8-2.8-1.2 2.8-1.2 1.2-2.8Z"/>
+            </g>
+            <path class="wand-stick" d="M4.8 19.2 15.4 8.6"/>
+            <path class="wand-stick" d="M7.3 21.7 17.9 11.1"/>
+            <path class="wand-stick" d="M4.8 19.2a1.8 1.8 0 0 0 2.5 2.5"/>
+            <path class="wand-stick" d="M15.4 8.6a1.8 1.8 0 0 1 2.5 2.5"/>
           </g>
           <g class="chat-history-icon">
             <path d="M3 12a9 9 0 1 0 3-6.7" fill="none" stroke="currentColor" stroke-width="2"/>
