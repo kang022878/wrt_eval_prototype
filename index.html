@@ -46,11 +46,20 @@
       box-shadow: 0 5px 14px rgba(0, 0, 0, .3);
     }
 
-    .folder {
+    .home-link {
       width: 36px;
-      height: 27px;
-      color: #334550;
+      height: 36px;
+      color: #56636d;
       flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      text-decoration: none;
+    }
+
+    .home-link img {
+      width: 27px;
+      height: 27px;
+      display: block;
     }
 
     .title-wrap {
@@ -111,42 +120,26 @@
       justify-self: center;
     }
 
-    .source-rail {
-      position: absolute;
-      right: max(42px, calc(50vw - 610px));
-      bottom: 40px;
-      width: 70px;
-      height: 145px;
-      display: none;
-      grid-template-rows: 1fr 1fr;
-      place-items: center;
-      padding: 13px 0;
-      border: 0;
-      border-radius: 34px;
-      background: #e1e1e1;
-      box-shadow: 0 8px 18px rgba(0, 0, 0, .2);
-      z-index: 20;
-    }
-
-    .stage.source-active.chat-hidden .source-rail {
-      display: grid;
+    .toolbar-spacer {
+      flex: 1 1 auto;
     }
 
     .rail-btn {
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 34px;
       border: 0;
-      border-radius: 50%;
-      background: transparent;
+      border-radius: 15px;
+      background: #d9d9d9;
       color: var(--blue);
       display: grid;
       place-items: center;
       cursor: pointer;
+      padding: 0;
     }
 
     .rail-btn svg {
-      width: 29px;
-      height: 29px;
+      width: 24px;
+      height: 24px;
       stroke: currentColor;
       fill: none;
       stroke-width: 1.8;
@@ -202,6 +195,68 @@
       font: 800 17px/1 "Courier New", monospace;
       cursor: pointer;
       padding: 0 12px;
+    }
+
+    .zoom-wrap {
+      position: relative;
+      width: 94px;
+      min-width: 94px;
+    }
+
+    .zoom {
+      width: 94px;
+      min-width: 94px;
+      padding: 0 13px;
+      grid-template-columns: auto auto;
+      justify-content: center;
+      column-gap: 8px;
+    }
+
+    .zoom-caret {
+      width: 0;
+      height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 7px solid currentColor;
+      transform: translateY(1px);
+    }
+
+    #zoomLabel {
+      justify-self: center;
+    }
+
+    .zoom-menu {
+      position: absolute;
+      top: 39px;
+      left: 0;
+      width: 100px;
+      display: none;
+      flex-direction: column;
+      padding: 5px;
+      border-radius: 11px;
+      background: #ececec;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, .22);
+      z-index: 25;
+    }
+
+    .zoom-menu.open {
+      display: flex;
+    }
+
+    .zoom-option {
+      height: 27px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #666;
+      font: 800 14px/1 "Courier New", monospace;
+      cursor: pointer;
+    }
+
+    .zoom-option:hover,
+    .zoom-option.active {
+      background: #d6d6d6;
+      color: #222;
     }
 
     .tool-btn.active {
@@ -263,13 +318,8 @@
     }
 
     .zoom {
-      width: 62px;
-      min-width: 62px;
       font-size: 16px;
       color: #8a8a8a;
-      display: inline-grid;
-      place-items: center;
-      padding: 0;
       text-align: center;
     }
 
@@ -1320,9 +1370,9 @@
 </head>
 <body>
   <header class="topbar">
-    <svg class="folder" viewBox="0 0 36 27" aria-hidden="true">
-      <path d="M1.8 5.7c0-1.1.9-2 2-2h10.1c.8 0 1.4.3 1.9.9l1.7 2.1h14.7c1.1 0 2 .9 2 2v14.1c0 1.1-.9 2-2 2H3.8c-1.1 0-2-.9-2-2V5.7Z" fill="currentColor"/>
-    </svg>
+    <a class="home-link" href="https://hci-paiper-anpyr.ap-northeast-2.arkain.site/home" aria-label="Go to home">
+      <img src="Vector.svg" alt="">
+    </a>
     <div class="title-wrap">
       <h1>Writing &amp; Evaluation</h1>
       <button class="tutorial-btn" type="button" aria-label="Play tutorial">
@@ -1343,7 +1393,38 @@
         <button class="tool-btn" id="terminalMode" type="button" title="Compiler Logs">
           <svg viewBox="0 0 24 24"><path d="m8 8 4 4-4 4"/><path d="M13 17h5"/><rect x="3" y="4" width="18" height="16" rx="3"/></svg>
         </button>
-        <button class="zoom" id="zoomButton" type="button">100%</button>
+        <div class="zoom-wrap">
+          <button class="zoom" id="zoomButton" type="button" aria-haspopup="true" aria-expanded="false">
+            <span id="zoomLabel">100%</span><span class="zoom-caret" aria-hidden="true"></span>
+          </button>
+          <div class="zoom-menu" id="zoomMenu">
+            <button class="zoom-option" type="button" data-zoom="75">75%</button>
+            <button class="zoom-option active" type="button" data-zoom="100">100%</button>
+            <button class="zoom-option" type="button" data-zoom="125">125%</button>
+            <button class="zoom-option" type="button" data-zoom="150">150%</button>
+          </div>
+        </div>
+        <span class="toolbar-spacer"></span>
+        <button class="rail-btn" id="railChat" type="button" title="Open Chat Box">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <g class="wand-sparkles">
+              <path d="M6.2 2.8 7.5 6l3.2 1.3-3.2 1.3-1.3 3.2-1.3-3.2-3.2-1.3L4.9 6l1.3-3.2Z"/>
+              <path d="M19.1 1.8 20 4.1l2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9.9-2.3Z"/>
+              <path d="M18.1 14.2 19.3 17l2.8 1.2-2.8 1.2-1.2 2.8-1.2-2.8-2.8-1.2 2.8-1.2 1.2-2.8Z"/>
+            </g>
+            <path class="wand-stick" d="M4.8 19.2 15.4 8.6"/>
+            <path class="wand-stick" d="M7.3 21.7 17.9 11.1"/>
+            <path class="wand-stick" d="M4.8 19.2a1.8 1.8 0 0 0 2.5 2.5"/>
+            <path class="wand-stick" d="M15.4 8.6a1.8 1.8 0 0 1 2.5 2.5"/>
+          </svg>
+        </button>
+        <button class="rail-btn" id="railHistory" type="button" title="Open Chat History">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 12a9 9 0 1 0 3-6.7"/>
+            <path d="M3 4v5h5"/>
+            <path d="M12 7v5l3 2"/>
+          </svg>
+        </button>
       </div>
       <div class="compile-strip" id="compileStrip">
         <button class="recompile-btn" id="recompileButton" type="button">Recompile</button>
@@ -1369,29 +1450,6 @@
 
       <button class="add-context" id="addContext" type="button">+ Add context</button>
     </section>
-
-    <nav class="source-rail" aria-label="Writing assistance">
-      <button class="rail-btn" id="railChat" type="button" title="Open Chat Box">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <g class="wand-sparkles">
-            <path d="M6.2 2.8 7.5 6l3.2 1.3-3.2 1.3-1.3 3.2-1.3-3.2-3.2-1.3L4.9 6l1.3-3.2Z"/>
-            <path d="M19.1 1.8 20 4.1l2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9.9-2.3Z"/>
-            <path d="M18.1 14.2 19.3 17l2.8 1.2-2.8 1.2-1.2 2.8-1.2-2.8-2.8-1.2 2.8-1.2 1.2-2.8Z"/>
-          </g>
-          <path class="wand-stick" d="M4.8 19.2 15.4 8.6"/>
-          <path class="wand-stick" d="M7.3 21.7 17.9 11.1"/>
-          <path class="wand-stick" d="M4.8 19.2a1.8 1.8 0 0 0 2.5 2.5"/>
-          <path class="wand-stick" d="M15.4 8.6a1.8 1.8 0 0 1 2.5 2.5"/>
-        </svg>
-      </button>
-      <button class="rail-btn" id="railHistory" type="button" title="Open Chat History">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M3 12a9 9 0 1 0 3-6.7"/>
-          <path d="M3 4v5h5"/>
-          <path d="M12 7v5l3 2"/>
-        </svg>
-      </button>
-    </nav>
 
     <aside class="chat closed" id="chat" aria-label="Chat Box">
       <div class="chat-head">
@@ -1534,6 +1592,9 @@
     const compileStrip = document.getElementById("compileStrip");
     const recompileButton = document.getElementById("recompileButton");
     const zoomButton = document.getElementById("zoomButton");
+    const zoomLabel = document.getElementById("zoomLabel");
+    const zoomMenu = document.getElementById("zoomMenu");
+    const zoomOptions = [...document.querySelectorAll(".zoom-option")];
     const toolButtons = [textMode, compileMode, terminalMode];
     const checks = [...document.querySelectorAll(".guard-options input")];
 
@@ -1585,6 +1646,7 @@ Our work is motivated by the idea that distraction management should be responsi
     let sent = false;
     let answerShown = false;
     let isGeneratingAnswer = false;
+    let safetyLensVisited = false;
     let chatFlowState = "compose";
     let originalPrompt = "";
     let rewrittenPrompt = "";
@@ -1599,8 +1661,8 @@ Our work is motivated by the idea that distraction management should be responsi
     let lastCompiledSource = initialLatex;
     let lastPdfUrl = "";
     let isCompiling = false;
-    const zoomLevels = [100, 125, 150, 75];
-    let zoomIndex = 0;
+    const zoomLevels = [75, 100, 125, 150];
+    let currentZoom = 100;
 
     const userPrompt = "이 부분에서 부족한 점이 뭐야?";
     const safetyLensMockResponses = [
@@ -2169,20 +2231,25 @@ Our work is motivated by the idea that distraction management should be responsi
     applyGuard.addEventListener("click", () => {
       if (!validateLensSelection()) return;
       applyLensRewrite();
+      safetyLensVisited = true;
       guardPanel.classList.remove("open");
       openReviewCard(rewrittenPrompt);
+      setSendArrow("up");
     });
 
     promptBox.addEventListener("input", () => {
       sent = false;
       if (chatFlowState !== "lens") {
         setComposerReviewMode(false);
-        chatFlowState = "compose";
+        chatFlowState = safetyLensVisited ? "ready" : "compose";
         originalPrompt = "";
         rewrittenPrompt = "";
-        selectedLens = [];
-        checks.forEach(item => item.checked = false);
+        if (!safetyLensVisited) {
+          selectedLens = [];
+          checks.forEach(item => item.checked = false);
+        }
       }
+      setSendArrow(safetyLensVisited ? "up" : "right");
       autoSizePrompt();
     });
 
@@ -2414,15 +2481,17 @@ Separate the response into:
         autoSizePrompt();
         return;
       }
-      if (chatFlowState === "compose") {
+      if (chatFlowState === "compose" && !safetyLensVisited) {
         openLensOptions();
         return;
       }
       if (chatFlowState === "lens") {
         if (!validateLensSelection()) return;
         applyLensRewrite();
+        safetyLensVisited = true;
         guardPanel.classList.remove("open");
         openReviewCard(rewrittenPrompt);
+        setSendArrow("up");
         return;
       }
       if (chatFlowState === "review") {
@@ -2470,11 +2539,21 @@ Separate the response into:
       composer.classList.toggle("reviewing", isReviewing);
     }
 
+    function setSendArrow(direction) {
+      sendButton.innerHTML = direction === "up"
+        ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V8"/><path d="m8 12 4-4 4 4"/></svg>'
+        : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12h8"/><path d="m12 8 4 4-4 4"/></svg>';
+    }
+
+    setSendArrow("right");
+
     acceptRewrite.addEventListener("click", () => {
       rewrittenPrompt = promptBox.value;
       originalPrompt = "";
+      safetyLensVisited = true;
       chatFlowState = "ready";
       setComposerReviewMode(false);
+      setSendArrow("up");
       autoSizePrompt();
       promptBox.focus();
     });
@@ -2485,8 +2564,10 @@ Separate the response into:
       selectedLens = [];
       checks.forEach(item => item.checked = false);
       lensValidation.style.display = "none";
-      chatFlowState = "compose";
+      safetyLensVisited = true;
+      chatFlowState = "ready";
       setComposerReviewMode(false);
+      setSendArrow("up");
       autoSizePrompt();
       promptBox.focus();
     });
@@ -2542,7 +2623,9 @@ Separate the response into:
         });
         isGeneratingAnswer = false;
         answerShown = true;
-        chatFlowState = "answered";
+        chatFlowState = "ready";
+        safetyLensVisited = true;
+        setSendArrow("up");
         renderConversation();
       }, 2000);
     }
@@ -2630,6 +2713,7 @@ Separate the response into:
       sent = false;
       answerShown = false;
       isGeneratingAnswer = false;
+      safetyLensVisited = false;
       chatFlowState = "compose";
       originalPrompt = "";
       rewrittenPrompt = "";
@@ -2640,6 +2724,7 @@ Separate the response into:
       chatBody.innerHTML = "";
       promptBox.value = "";
       setComposerReviewMode(false);
+      setSendArrow("right");
       guardPanel.classList.remove("open");
       autoSizePrompt();
     }
@@ -2656,6 +2741,7 @@ Separate the response into:
       sent = Boolean(currentMessages.length);
       answerShown = Boolean(currentMessages.length);
       isGeneratingAnswer = false;
+      safetyLensVisited = true;
       chatFlowState = "compose";
       originalPrompt = "";
       rewrittenPrompt = "";
@@ -2663,6 +2749,7 @@ Separate the response into:
       checks.forEach(item => item.checked = false);
       promptBox.value = "";
       setComposerReviewMode(false);
+      setSendArrow("up");
       guardPanel.classList.remove("open");
       showChat("Chat Box");
       composerShell.style.display = "flex";
@@ -2728,14 +2815,14 @@ Separate the response into:
     });
     railHistory.addEventListener("click", showHistory);
     closeChat.addEventListener("click", handleCloseChat);
-    zoomButton.addEventListener("click", () => {
-      zoomIndex = (zoomIndex + 1) % zoomLevels.length;
-      const zoom = zoomLevels[zoomIndex];
+    function applyZoom(zoom) {
+      currentZoom = zoomLevels.includes(zoom) ? zoom : 100;
       const codeSize = 20 * zoom / 100;
       const codeLineHeight = 24 * zoom / 100;
       const logSize = 16 * zoom / 100;
       const logLineHeight = 21.6 * zoom / 100;
-      zoomButton.textContent = `${zoom}%`;
+      zoomLabel.textContent = `${zoom}%`;
+      zoomOptions.forEach(option => option.classList.toggle("active", Number(option.dataset.zoom) === zoom));
       compiledPaper.style.transform = `scale(${zoom / 100})`;
       compiledPaper.style.transformOrigin = "top center";
       editorWrap.style.fontSize = `${codeSize}px`;
@@ -2745,6 +2832,27 @@ Separate the response into:
       mainLogBox.style.fontSize = `${logSize}px`;
       mainLogBox.style.lineHeight = `${logLineHeight}px`;
       updateEditorView();
+    }
+
+    function closeZoomMenu() {
+      zoomMenu.classList.remove("open");
+      zoomButton.setAttribute("aria-expanded", "false");
+    }
+
+    zoomButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const isOpen = zoomMenu.classList.toggle("open");
+      zoomButton.setAttribute("aria-expanded", String(isOpen));
+    });
+    zoomOptions.forEach((option) => {
+      option.addEventListener("click", (event) => {
+        event.stopPropagation();
+        applyZoom(Number(option.dataset.zoom));
+        closeZoomMenu();
+      });
+    });
+    document.addEventListener("click", (event) => {
+      if (!zoomMenu.contains(event.target) && event.target !== zoomButton) closeZoomMenu();
     });
     updateEditorView();
     autoSizePrompt();
