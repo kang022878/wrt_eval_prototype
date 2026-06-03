@@ -1,0 +1,2728 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Writing & Evaluation</title>
+  <style>
+    :root {
+      --ink: #171717;
+      --muted: #8b8b8b;
+      --tool: #9aa3aa;
+      --blue: #087cff;
+      --green: #039b2d;
+      --select: #bfe0fa;
+      --yellow: #ffe86a;
+      --answer: #dfe4f8;
+      --paper-edge: #d8d8d8;
+      --app-gray: #ededed;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 50% 14%, rgba(82, 82, 82, .5), transparent 34%),
+        linear-gradient(90deg, #2f2f2f 0%, #151515 46%, #111 100%);
+      font-family: Arial, Helvetica, sans-serif;
+      letter-spacing: 0;
+    }
+
+    .topbar {
+      height: 92px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 0 34px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, .82) 0%, rgba(242, 242, 242, .72) 48%, rgba(190, 190, 190, .72) 100%),
+        linear-gradient(90deg, #ffffff 0%, #f7f7f7 48%, #d9d9d9 75%, #bdbdbd 100%);
+      border-bottom: 1px solid #ababab;
+      box-shadow: 0 5px 14px rgba(0, 0, 0, .3);
+    }
+
+    .folder {
+      width: 36px;
+      height: 27px;
+      color: #334550;
+      flex: 0 0 auto;
+    }
+
+    .title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 25px;
+      line-height: 1;
+      font-weight: 800;
+      color: #050505;
+      white-space: nowrap;
+    }
+
+    .tutorial-btn {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #9a9a9a;
+      border-radius: 1px;
+      background: transparent;
+      color: #8f8f8f;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .tutorial-btn svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    .stage {
+      position: relative;
+      min-height: calc(100vh - 92px);
+      padding: 34px 38px 32px;
+      background:
+        radial-gradient(circle at 50% 14%, rgba(82, 82, 82, .5), transparent 34%),
+        linear-gradient(90deg, #2f2f2f 0%, #151515 46%, #111 100%);
+      display: grid;
+      grid-template-columns: minmax(760px, 980px) 404px;
+      justify-content: center;
+      align-items: start;
+      gap: 26px;
+      overflow: hidden;
+      transition: grid-template-columns .18s ease;
+    }
+
+    .stage.chat-hidden {
+      grid-template-columns: 1040px;
+    }
+
+    .stage.chat-hidden .editor-shell {
+      justify-self: center;
+    }
+
+    .source-rail {
+      position: absolute;
+      right: max(42px, calc(50vw - 610px));
+      bottom: 40px;
+      width: 70px;
+      height: 145px;
+      display: none;
+      grid-template-rows: 1fr 1fr;
+      place-items: center;
+      padding: 13px 0;
+      border: 0;
+      border-radius: 34px;
+      background: #e1e1e1;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, .2);
+      z-index: 20;
+    }
+
+    .stage.source-active.chat-hidden .source-rail {
+      display: grid;
+    }
+
+    .rail-btn {
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--blue);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+
+    .rail-btn svg {
+      width: 29px;
+      height: 29px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+    }
+
+    .editor-shell {
+      position: relative;
+      width: 100%;
+      height: 820px;
+      max-height: calc(100vh - 126px);
+      background: #fff;
+      border: 1px solid var(--paper-edge);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 32px rgba(0, 0, 0, .08);
+    }
+
+    .editor-toolbar {
+      height: 49px;
+      padding: 7px 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--tool);
+      border-radius: 0;
+    }
+
+    .tool-btn,
+    .zoom {
+      position: relative;
+      height: 34px;
+      width: 51px;
+      min-width: 51px;
+      border: 0;
+      border-radius: 15px;
+      background: #d9d9d9;
+      color: #777;
+      display: inline-grid;
+      place-items: center;
+      font: 800 17px/1 "Courier New", monospace;
+      cursor: pointer;
+      padding: 0 12px;
+    }
+
+    .tool-btn.active {
+      background: #ececec;
+      color: #222;
+      box-shadow: inset 0 0 0 4px #747474;
+    }
+
+    .tool-btn svg {
+      width: 19px;
+      height: 19px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .loading-dots {
+      display: none;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .loading-dots span {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #8f969b;
+      animation: dotPulse 1s ease-in-out infinite;
+    }
+
+    .loading-dots span:nth-child(2) {
+      animation-delay: .16s;
+    }
+
+    .loading-dots span:nth-child(3) {
+      animation-delay: .32s;
+    }
+
+    .tool-btn.has-new-log::after {
+      content: "";
+      position: absolute;
+      top: -3px;
+      right: -2px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #d82323;
+      box-shadow: 0 0 0 2px #f8f8f8;
+    }
+
+    @keyframes dotPulse {
+      0%, 80%, 100% {
+        background: #b8bec3;
+      }
+
+      40% {
+        background: #334550;
+      }
+    }
+
+    .zoom {
+      width: 62px;
+      min-width: 62px;
+      font-size: 16px;
+      color: #8a8a8a;
+      display: inline-grid;
+      place-items: center;
+      padding: 0;
+      text-align: center;
+    }
+
+    .source-pane,
+    .preview-pane,
+    .main-log-pane {
+      height: calc(100% - 91px);
+    }
+
+    .compile-strip {
+      height: 42px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      background: #e9ecef;
+      border-bottom: 1px solid #d2d6da;
+    }
+
+    .recompile-btn {
+      height: 28px;
+      border: 0;
+      border-radius: 7px;
+      background: #334550;
+      color: #fff;
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .recompile-btn:disabled {
+      opacity: .75;
+      cursor: default;
+    }
+
+    .compile-strip.compiling .loading-dots {
+      display: flex;
+    }
+
+    .editor-shell.preview-mode .compile-strip {
+      display: flex;
+    }
+
+    .editor-shell.source-mode .source-pane {
+      height: calc(100% - 49px);
+    }
+
+    .editor-shell.log-mode .main-log-pane {
+      height: calc(100% - 49px);
+    }
+
+    .editor-shell.log-mode {
+      background: #172c38;
+      border-color: #172c38;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, .28);
+    }
+
+    .editor-shell.log-mode .editor-toolbar {
+      background: #9b9b99;
+    }
+
+    .source-pane {
+      display: grid;
+      grid-template-columns: 58px minmax(0, 1fr);
+      overflow: hidden;
+      padding: 18px 22px 0 32px;
+      background: #fff;
+    }
+
+    .line-numbers {
+      margin: 0;
+      padding-top: 0;
+      padding-right: 11px;
+      color: var(--muted);
+      font: 20px/24px "Courier New", Courier, monospace;
+      text-align: right;
+      user-select: none;
+      white-space: pre;
+      overflow: hidden;
+    }
+
+    .editor-wrap {
+      position: relative;
+      height: 100%;
+      min-width: 0;
+      overflow: hidden;
+      font: 20px/24px "Courier New", Courier, monospace;
+    }
+
+    .highlight-layer {
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      padding: 0 0 52px;
+      border: 0;
+      color: #242424;
+      background: transparent;
+      font: inherit;
+      line-height: inherit;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      word-break: normal;
+      pointer-events: none;
+    }
+
+    .syn-struct {
+      color: #d45bb2;
+      font-weight: 600;
+    }
+
+    .syn-command {
+      color: #008bd3;
+      font-weight: 600;
+    }
+
+    .syn-env {
+      color: #06a653;
+    }
+
+    .syn-comment {
+      color: #8da17f;
+    }
+
+    .syn-math {
+      color: #c67821;
+    }
+
+    .latex-input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      max-height: none;
+      margin: 0;
+      resize: none;
+      border: 0;
+      outline: 0;
+      padding: 0 0 52px;
+      overflow: auto;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      background: transparent;
+      font: inherit;
+      line-height: inherit;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      word-break: normal;
+      scrollbar-width: none;
+      caret-color: #242424;
+    }
+
+    .latex-input::selection {
+      background: var(--select);
+      color: #242424;
+      -webkit-text-fill-color: #242424;
+    }
+
+    .latex-input::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+
+    .preview-pane {
+      display: none;
+      overflow: auto;
+      padding: 0;
+      scrollbar-width: none;
+      background: #f2f2f2;
+    }
+
+    .main-log-pane {
+      display: none;
+      align-items: flex-end;
+      justify-content: flex-start;
+      background: #172c38;
+      padding: 0 50px 58px 70px;
+      overflow: auto;
+    }
+
+    .main-log-box {
+      width: 100%;
+      max-width: none;
+      min-height: 0;
+      margin: 0;
+      padding: 0;
+      border-radius: 2px;
+      background: transparent;
+      color: #e0e7ef;
+      font: 16px/1.35 "Courier New", Courier, monospace;
+      text-align: left;
+      white-space: pre-wrap;
+    }
+
+    .preview-pane::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+
+    .compiled-paper {
+      font-family: "Times New Roman", Times, serif;
+      color: #1e1e1e;
+      max-width: 620px;
+      margin: 96px auto 70px;
+      user-select: text;
+    }
+
+    .pdf-frame {
+      display: none;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #fff;
+    }
+
+    .compiled-title {
+      margin: 0 auto 20px;
+      max-width: 650px;
+      text-align: center;
+      font-size: 28px;
+      line-height: 1.17;
+      font-weight: 400;
+    }
+
+    .compiled-authors,
+    .compiled-date {
+      text-align: center;
+      font-size: 20px;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .compiled-date {
+      margin-bottom: 43px;
+    }
+
+    .abstract-title {
+      margin: 0 0 8px;
+      text-align: center;
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .compiled-abstract {
+      max-width: 520px;
+      margin: 0 auto 28px;
+      font-size: 16.5px;
+      line-height: 1.13;
+      text-align: justify;
+    }
+
+    .compiled-section {
+      display: flex;
+      align-items: baseline;
+      gap: 26px;
+      margin: 22px 0 12px;
+      font-size: 27px;
+      font-weight: 800;
+    }
+
+    .compiled-body {
+      font-size: 19px;
+      line-height: 1.22;
+      text-align: left;
+    }
+
+    .citation-hit {
+      background: var(--yellow);
+    }
+
+    .add-context {
+      position: fixed;
+      z-index: 30;
+      display: none;
+      align-items: center;
+      gap: 4px;
+      height: 30px;
+      padding: 0 12px;
+      border: 1px solid #111;
+      border-radius: 999px;
+      background: #171717;
+      color: #fff;
+      font: 700 13px/1 Arial, sans-serif;
+      box-shadow: 0 5px 16px rgba(0, 0, 0, .28);
+      cursor: pointer;
+    }
+
+    .chat {
+      width: 404px;
+      height: 820px;
+      max-height: calc(100vh - 126px);
+      align-self: start;
+      background: #fff;
+      border: 1px solid #d0d0d0;
+      border-radius: 24px;
+      padding: 19px 13px 15px;
+      display: grid;
+      grid-template-rows: 34px 1fr auto;
+      box-shadow: 0 7px 18px rgba(0, 0, 0, .07);
+      min-height: 0;
+    }
+
+    .chat.closed {
+      display: none;
+    }
+
+    .chat-head {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 0 5px 0 3px;
+      font-weight: 800;
+      font-size: 21px;
+    }
+
+    .wand {
+      width: 26px;
+      height: 26px;
+      color: var(--blue);
+      flex: 0 0 auto;
+    }
+
+    .chat-history-icon {
+      display: none;
+    }
+
+    .chat.history-open .chat-wand-icon {
+      display: none;
+    }
+
+    .chat.history-open .chat-history-icon {
+      display: block;
+    }
+
+    .close-chat {
+      margin-left: auto;
+      border: 0;
+      background: transparent;
+      width: 26px;
+      height: 26px;
+      font-size: 27px;
+      line-height: 20px;
+      cursor: pointer;
+      color: #111;
+    }
+
+    .chat-body {
+      min-height: 0;
+      overflow-y: auto;
+      padding: 10px 1px 9px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 10px;
+      scrollbar-width: thin;
+    }
+
+    .chat-body::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+
+    .chat-body::-webkit-scrollbar-thumb {
+      background: #d8d8d8;
+      border-radius: 999px;
+    }
+
+    .history-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 25px 13px 8px;
+      border-bottom: 1px solid #c7c7c7;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .history-row:hover {
+      background: #f7f7f7;
+    }
+
+    .history-date {
+      margin-left: auto;
+      color: #9c9c9c;
+      font-size: 10px;
+      font-weight: 400;
+    }
+
+    .context-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin: 4px 0 6px;
+      padding-top: 4px;
+      border-top: 3px solid #fff;
+      order: 1;
+    }
+
+    .context-list:empty {
+      margin: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .context-chip {
+      position: relative;
+      min-height: 43px;
+      padding: 7px 21px 7px 21px;
+      border-radius: 10px;
+      background: #dedede;
+      color: #898989;
+      font-size: 10px;
+      line-height: 1.15;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .context-chip::before {
+      content: "↳";
+      position: absolute;
+      top: 7px;
+      left: 7px;
+      color: #8c8c8c;
+      font-size: 13px;
+    }
+
+    .remove-chip {
+      position: absolute;
+      top: 4px;
+      right: 7px;
+      border: 0;
+      background: transparent;
+      color: #777;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .message {
+      max-width: 266px;
+      padding: 10px 11px;
+      font-size: 14px;
+      line-height: 1.18;
+      color: #1f1f1f;
+      white-space: pre-wrap;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: #e3e7fb;
+      border-radius: 16px 16px 4px 16px;
+      max-width: 278px;
+    }
+
+    .message.bot {
+      align-self: flex-start;
+      background: #dfdfe6;
+      border-radius: 16px 16px 16px 4px;
+      cursor: default;
+    }
+
+    .mock-result {
+      align-self: flex-start;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      max-width: 282px;
+      padding: 10px 12px;
+      border-radius: 16px 16px 16px 4px;
+      background: #dfdfe6;
+      color: #1f1f1f;
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .mock-result h4 {
+      margin: 0 0 4px;
+      font-size: 13px;
+      line-height: 1.1;
+    }
+
+    .mock-result p {
+      margin: 0;
+    }
+
+    .lens-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .lens-pill {
+      border-radius: 8px;
+      background: #dfe4f8;
+      padding: 3px 6px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .prompt-details {
+      border: 1px dashed #9b9b9b;
+      border-radius: 8px;
+      padding: 7px 8px;
+      background: #fff;
+    }
+
+    .prompt-details summary {
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .prompt-details pre {
+      margin: 7px 0 0;
+      white-space: pre-wrap;
+      font: 10px/1.25 "Courier New", Courier, monospace;
+      color: #333;
+    }
+
+    .result-section {
+      padding: 0;
+      background: transparent;
+    }
+
+    .result-section ul {
+      margin: 4px 0 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .result-section li {
+      position: relative;
+      margin: 4px 0;
+      padding-left: 16px;
+    }
+
+    .result-section li::before {
+      content: "•";
+      position: absolute;
+      left: 2px;
+      top: 0;
+    }
+
+    .evidence-row {
+      display: grid;
+      grid-template-columns: 1fr 18px;
+      gap: 5px;
+      align-items: start;
+    }
+
+    .evidence-button {
+      width: 18px;
+      height: 18px;
+      border: 0;
+      background: transparent;
+      color: #8b8b8b;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      padding: 0;
+      transform: translateY(-1px);
+    }
+
+    .evidence-button svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .evidence-button.active {
+      color: #a87900;
+    }
+
+    .typing-message {
+      align-self: flex-start;
+      background: #dfdfe6;
+      border-radius: 16px 16px 16px 4px;
+      padding: 10px 12px;
+      color: #5f5f5f;
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    .typing-dots {
+      display: inline-flex;
+      gap: 3px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    .typing-dots span {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: .35;
+      animation: typingPulse 1s infinite ease-in-out;
+    }
+
+    .typing-dots span:nth-child(2) {
+      animation-delay: .16s;
+    }
+
+    .typing-dots span:nth-child(3) {
+      animation-delay: .32s;
+    }
+
+    @keyframes typingPulse {
+      0%, 80%, 100% { opacity: .25; transform: translateY(0); }
+      40% { opacity: 1; transform: translateY(-2px); }
+    }
+
+    .lens-validation {
+      display: none;
+      margin: 4px 0 0 27px;
+      color: #d33f3f;
+      font-size: 11px;
+      line-height: 1.15;
+    }
+
+    .review-card {
+      border: 1px dashed #777;
+      border-radius: 10px;
+      padding: 10px 12px 10px 38px;
+      font-size: 16px;
+      line-height: 1.18;
+      position: relative;
+      white-space: pre-wrap;
+      max-height: min(460px, calc(100vh - 360px));
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .review-card::before {
+      content: "+";
+      position: absolute;
+      left: 14px;
+      bottom: 11px;
+      font-size: 25px;
+      line-height: 1;
+    }
+
+    .review-actions {
+      position: sticky;
+      bottom: 0;
+      z-index: 2;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 5px;
+      padding: 9px 0 0;
+      background: #fff;
+    }
+
+    .review-text {
+      overflow: auto;
+      padding-right: 8px;
+      padding-bottom: 8px;
+      scrollbar-width: thin;
+    }
+
+    .accept,
+    .decline {
+      height: 18px;
+      border: 0;
+      border-radius: 5px;
+      color: #fff;
+      font-size: 12px;
+      line-height: 18px;
+      padding: 0 6px;
+      cursor: pointer;
+    }
+
+    .accept {
+      background: #238841;
+    }
+
+    .decline {
+      background: #d33f3f;
+    }
+
+    .composer-shell {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .composer {
+      order: 3;
+      min-height: 45px;
+      border: 1px dashed #777;
+      border-radius: 13px;
+      display: grid;
+      grid-template-columns: 30px 1fr 34px;
+      grid-template-areas: "plus input send";
+      align-items: end;
+      gap: 4px;
+      padding: 6px 8px 7px;
+      background: #fff;
+    }
+
+    .composer.reviewing {
+      min-height: 170px;
+      grid-template-columns: 30px 1fr;
+      grid-template-areas:
+        "input input"
+        "plus actions";
+      align-items: end;
+      row-gap: 6px;
+    }
+
+    .icon-button {
+      width: 26px;
+      height: 26px;
+      border: 0;
+      background: transparent;
+      display: grid;
+      place-items: center;
+      color: #151515;
+      font-size: 25px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    #plus {
+      grid-area: plus;
+    }
+
+    .send {
+      grid-area: send;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #d7d7d7;
+      color: #151515;
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 1;
+      align-self: center;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .18);
+      transition: transform .12s ease, background .12s ease;
+    }
+
+    .send svg,
+    .back svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .composer.reviewing .send {
+      display: none;
+    }
+
+    .composer-review-actions {
+      grid-area: actions;
+      display: none;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .composer.reviewing .composer-review-actions {
+      display: flex;
+    }
+
+    .send:hover,
+    .back:hover {
+      background: #c7c7c7;
+      transform: translateY(-1px);
+    }
+
+    .prompt-input {
+      grid-area: input;
+      width: 100%;
+      min-height: 26px;
+      max-height: 164px;
+      resize: none;
+      border: 0;
+      outline: 0;
+      padding: 5px 0 1px;
+      color: #1f1f1f;
+      font: 14px/1.16 Arial, Helvetica, sans-serif;
+      overflow: auto;
+      scrollbar-width: thin;
+    }
+
+    .composer.reviewing .prompt-input {
+      min-height: 122px;
+      max-height: 360px;
+      padding: 8px 0 2px;
+    }
+
+    .prompt-input::placeholder {
+      color: #8e8e8e;
+    }
+
+    .guard-tip {
+      position: absolute;
+      left: 9px;
+      bottom: 29px;
+      display: none;
+      padding: 3px 7px;
+      border-radius: 5px;
+      background: #909090;
+      color: #fff;
+      font-size: 10px;
+      z-index: 5;
+    }
+
+    .plus-menu {
+      position: absolute;
+      left: 1px;
+      bottom: 51px;
+      width: 248px;
+      display: none;
+      flex-direction: column;
+      background: rgba(142, 142, 142, .96);
+      color: #fff;
+      z-index: 8;
+      border-radius: 13px;
+      overflow: hidden;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, .2);
+      backdrop-filter: blur(3px);
+    }
+
+    .plus-menu.open {
+      display: flex;
+    }
+
+    .plus-menu button {
+      height: 38px;
+      border: 0;
+      border-bottom: 1px solid rgba(255, 255, 255, .45);
+      background: transparent;
+      color: inherit;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 0 12px;
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .plus-menu button:last-child {
+      border-bottom: 0;
+    }
+
+    .plus-menu svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      flex: 0 0 auto;
+    }
+
+    .guard-panel {
+      order: 2;
+      position: relative;
+      display: none;
+      background: #fff;
+      border: 1px dashed #777;
+      border-radius: 12px;
+      padding: 11px 14px 10px;
+      margin-bottom: 6px;
+      z-index: 4;
+    }
+
+    .guard-panel.open {
+      display: block;
+    }
+
+    .guard-title {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .guard-title small:first-of-type {
+      color: #777;
+      font-size: 11px;
+      font-weight: 400;
+    }
+
+    .lens-info-toggle {
+      border: 0;
+      background: transparent;
+      color: #777;
+      font-size: 13px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0 2px;
+    }
+
+    .lens-info-panel {
+      display: none;
+      margin: -2px 0 8px;
+      padding: 8px 9px;
+      border-radius: 9px;
+      background: #ededed;
+      color: #252525;
+      font-size: 10.5px;
+      line-height: 1.22;
+    }
+
+    .lens-info-panel.open {
+      display: block;
+    }
+
+    .lens-info-panel p {
+      margin: 0 0 5px;
+    }
+
+    .lens-info-panel p:last-child {
+      margin-bottom: 0;
+    }
+
+    .guard-title small:last-child {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 400;
+    }
+
+    .guard-options {
+      list-style: none;
+      margin: 0 0 4px;
+      padding: 0 0 0 2px;
+      font-size: 14px;
+      line-height: 1.16;
+    }
+
+    .guard-options li {
+      margin: 0 0 4px;
+    }
+
+    .guard-options label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+
+    .guard-options input {
+      appearance: none;
+      width: 10px;
+      height: 10px;
+      border: 1px dashed #555;
+      border-radius: 1px;
+      display: inline-grid;
+      place-items: center;
+      margin: 0;
+    }
+
+    .guard-options input:checked::after {
+      content: "✓";
+      font-size: 11px;
+      color: #333;
+      transform: translateY(-1px);
+    }
+
+    .custom-lens {
+      width: 216px;
+      height: 20px;
+      margin-left: 27px;
+      border: 1px solid #b5b5b5;
+      padding: 1px 4px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .guard-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 4px;
+    }
+
+    .back {
+      border: 0;
+      width: 31px;
+      height: 31px;
+      border-radius: 50%;
+      background: #d7d7d7;
+      color: #151515;
+      display: grid;
+      place-items: center;
+      font-size: 21px;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
+      transition: transform .12s ease, background .12s ease;
+    }
+
+    .apply {
+      min-width: 42px;
+      height: 16px;
+      border: 0;
+      border-radius: 5px;
+      background: #9d9d9d;
+      color: #fff;
+      font-size: 10px;
+      cursor: pointer;
+      padding: 0 7px;
+    }
+
+    .apply.enabled {
+      background: #1f74e6;
+    }
+
+    @media (max-width: 1120px) {
+      .stage,
+      .stage.chat-hidden {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 28px 18px 30px;
+      }
+
+      .editor-shell,
+      .chat {
+        width: 100%;
+        max-height: none;
+      }
+
+      .chat {
+        height: 580px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <svg class="folder" viewBox="0 0 36 27" aria-hidden="true">
+      <path d="M1.8 5.7c0-1.1.9-2 2-2h10.1c.8 0 1.4.3 1.9.9l1.7 2.1h14.7c1.1 0 2 .9 2 2v14.1c0 1.1-.9 2-2 2H3.8c-1.1 0-2-.9-2-2V5.7Z" fill="currentColor"/>
+    </svg>
+    <div class="title-wrap">
+      <h1>Writing &amp; Evaluation</h1>
+      <button class="tutorial-btn" type="button" aria-label="Play tutorial">
+        <svg viewBox="0 0 12 14" aria-hidden="true">
+          <path d="M2 1.6v10.8L10.5 7 2 1.6Z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="stage chat-hidden source-active" id="stage">
+    <section class="editor-shell source-mode" aria-label="LaTeX paper editor">
+      <div class="editor-toolbar">
+        <button class="tool-btn active" id="textMode" type="button" title="Write LaTeX">T</button>
+        <button class="tool-btn" id="compileMode" type="button" title="Compile">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7Z"/></svg>
+        </button>
+        <button class="tool-btn" id="terminalMode" type="button" title="Compiler Logs">
+          <svg viewBox="0 0 24 24"><path d="m8 8 4 4-4 4"/><path d="M13 17h5"/><rect x="3" y="4" width="18" height="16" rx="3"/></svg>
+        </button>
+        <button class="zoom" id="zoomButton" type="button">100%</button>
+      </div>
+      <div class="compile-strip" id="compileStrip">
+        <button class="recompile-btn" id="recompileButton" type="button">Recompile</button>
+        <span class="loading-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+      </div>
+
+      <div class="source-pane" id="sourcePane">
+        <pre class="line-numbers" id="lineNumbers" aria-hidden="true"></pre>
+        <div class="editor-wrap" id="editorWrap">
+          <pre class="highlight-layer" id="highlightLayer" aria-hidden="true"></pre>
+          <textarea class="latex-input" id="latexInput" spellcheck="false" wrap="soft"></textarea>
+        </div>
+      </div>
+
+      <div class="preview-pane" id="previewPane">
+        <iframe class="pdf-frame" id="pdfFrame" title="Compiled PDF preview"></iframe>
+        <article class="compiled-paper" id="compiledPaper"></article>
+      </div>
+
+      <div class="main-log-pane" id="mainLogPane">
+        <pre class="main-log-box" id="mainLogBox"></pre>
+      </div>
+
+      <button class="add-context" id="addContext" type="button">+ Add context</button>
+    </section>
+
+    <nav class="source-rail" aria-label="Writing assistance">
+      <button class="rail-btn" id="railChat" type="button" title="Open Chat Box">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m14 4 1.3 2.8L18 8l-2.7 1.2L14 12l-1.2-2.8L10 8l2.8-1.2L14 4Z"/>
+          <path d="M6 17 17 6" stroke-linecap="round"/>
+          <path d="m5 6 .7 1.5L7 8l-1.3.5L5 10l-.6-1.5L3 8l1.4-.5L5 6Zm14 8 .8 1.8 1.7.7-1.7.7L19 19l-.8-1.8-1.7-.7 1.7-.7L19 14Z"/>
+        </svg>
+      </button>
+      <button class="rail-btn" id="railHistory" type="button" title="Open Chat History">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 12a9 9 0 1 0 3-6.7"/>
+          <path d="M3 4v5h5"/>
+          <path d="M12 7v5l3 2"/>
+        </svg>
+      </button>
+    </nav>
+
+    <aside class="chat closed" id="chat" aria-label="Chat Box">
+      <div class="chat-head">
+        <svg class="wand" viewBox="0 0 24 24" aria-hidden="true">
+          <g class="chat-wand-icon">
+            <path d="m14 4 1.3 2.8L18 8l-2.7 1.2L14 12l-1.2-2.8L10 8l2.8-1.2L14 4Z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M6 17 17 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="m5 6 .7 1.5L7 8l-1.3.5L5 10l-.6-1.5L3 8l1.4-.5L5 6Zm14 8 .8 1.8 1.7.7-1.7.7L19 19l-.8-1.8-1.7-.7 1.7-.7L19 14Z" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          </g>
+          <g class="chat-history-icon">
+            <path d="M3 12a9 9 0 1 0 3-6.7" fill="none" stroke="currentColor" stroke-width="2"/>
+            <path d="M3 4v5h5" fill="none" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2"/>
+          </g>
+        </svg>
+        <span id="chatTitle">Chat Box</span>
+        <button class="close-chat" id="closeChat" type="button" aria-label="Close">×</button>
+      </div>
+      <div class="chat-body" id="chatBody"></div>
+      <div class="composer-shell" id="composerShell">
+        <div class="guard-panel" id="guardPanel">
+          <div class="guard-title">
+            <span>Safety Lens Options</span><button class="lens-info-toggle" id="lensInfoToggle" type="button" aria-label="Show safety lens explanations">ⓘ</button><small>*Select all that apply</small>
+          </div>
+          <div class="lens-info-panel" id="lensInfoPanel">
+            <p><strong>Source &amp; Citation Verification:</strong> Checks whether cited sources and evidence are real and relevant.</p>
+            <p><strong>Hallucination Detection:</strong> Checks whether the AI invents unsupported claims, references, or examples.</p>
+            <p><strong>Assumption Challenge:</strong> Encourages alternative explanations instead of reinforcing the user's initial assumptions.</p>
+            <p><strong>Over-reliance Prevention:</strong> Reminds users to critically evaluate AI outputs before accepting them.</p>
+            <p><strong>Privacy &amp; Confidentiality:</strong> Checks anonymity, data minimization, and possible disclosure of sensitive research data.</p>
+            <p><strong>Ethical Bias &amp; Representation:</strong> Checks whether outputs reflect cultural, demographic, or ideological bias.</p>
+          </div>
+          <ul class="guard-options">
+            <li><label><input type="checkbox" value="source-citation">Source &amp; Citation Verification Lens</label></li>
+            <li><label><input type="checkbox" value="hallucination">Hallucination Detection Lens</label></li>
+            <li><label><input type="checkbox" value="assumption">Assumption Challenge Lens</label></li>
+            <li><label><input type="checkbox" value="over-reliance">Over-reliance Prevention Lens</label></li>
+            <li><label><input type="checkbox" value="privacy">Privacy &amp; Confidentiality Lens</label></li>
+            <li><label><input type="checkbox" value="ethical-bias">Ethical Bias &amp; Representation Lens</label></li>
+            <li><label><input type="checkbox" value="custom">Add Custom Lens</label></li>
+          </ul>
+          <input class="custom-lens" id="customLensInput" type="text" placeholder="Enter ...">
+          <div class="lens-validation" id="lensValidation"></div>
+          <div class="guard-actions">
+            <button class="back" id="guardBack" type="button" aria-label="Back">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 6 9 12l6 6"/>
+              </svg>
+            </button>
+            <button class="apply" id="applyGuard" type="button">Apply</button>
+          </div>
+        </div>
+        <span class="guard-tip" id="guardTip">Set safety lens options</span>
+        <div class="plus-menu" id="plusMenu">
+          <button id="addFilesOption" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 11.5 12 20.5a6 6 0 0 1-8.5-8.5l9.7-9.7a4 4 0 0 1 5.7 5.7l-9.7 9.7a2 2 0 1 1-2.8-2.8l8.9-8.9"/>
+            </svg>
+            <span>Add photos &amp; files</span>
+          </button>
+          <button id="openLensOption" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m4 6 2 2 4-4"/>
+              <path d="m4 12 2 2 4-4"/>
+              <path d="m4 18 2 2 4-4"/>
+              <path d="M13 7h7"/>
+              <path d="M13 13h7"/>
+              <path d="M13 19h7"/>
+            </svg>
+            <span>Set safety lens options</span>
+          </button>
+        </div>
+        <div class="context-list" id="contextList"></div>
+        <div class="composer">
+          <button class="icon-button" id="plus" type="button" aria-label="Add safety lens">+</button>
+          <textarea class="prompt-input" id="prompt" rows="1" placeholder="Enter ..."></textarea>
+          <button class="icon-button send" id="send" type="button" aria-label="Send">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 16V8"/>
+              <path d="m8 12 4-4 4 4"/>
+            </svg>
+          </button>
+          <div class="composer-review-actions" id="composerReviewActions">
+            <button class="accept" id="acceptRewrite" type="button">Accept</button>
+            <button class="decline" id="declineRewrite" type="button">Decline</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    const stage = document.getElementById("stage");
+    const editorShell = document.querySelector(".editor-shell");
+    const sourcePane = document.getElementById("sourcePane");
+    const previewPane = document.getElementById("previewPane");
+    const pdfFrame = document.getElementById("pdfFrame");
+    const compiledPaper = document.getElementById("compiledPaper");
+    const mainLogPane = document.getElementById("mainLogPane");
+    const mainLogBox = document.getElementById("mainLogBox");
+    const editorWrap = document.getElementById("editorWrap");
+    const highlightLayer = document.getElementById("highlightLayer");
+    const latexInput = document.getElementById("latexInput");
+    const lineNumbers = document.getElementById("lineNumbers");
+    const addContext = document.getElementById("addContext");
+    const chat = document.getElementById("chat");
+    const chatBody = document.getElementById("chatBody");
+    const chatTitle = document.getElementById("chatTitle");
+    const composerShell = document.getElementById("composerShell");
+    const composer = document.querySelector(".composer");
+    const contextList = document.getElementById("contextList");
+    const promptBox = document.getElementById("prompt");
+    const sendButton = document.getElementById("send");
+    const acceptRewrite = document.getElementById("acceptRewrite");
+    const declineRewrite = document.getElementById("declineRewrite");
+    const plus = document.getElementById("plus");
+    const plusMenu = document.getElementById("plusMenu");
+    const addFilesOption = document.getElementById("addFilesOption");
+    const openLensOption = document.getElementById("openLensOption");
+    const guardTip = document.getElementById("guardTip");
+    const guardPanel = document.getElementById("guardPanel");
+    const applyGuard = document.getElementById("applyGuard");
+    const guardBack = document.getElementById("guardBack");
+    const lensInfoToggle = document.getElementById("lensInfoToggle");
+    const lensInfoPanel = document.getElementById("lensInfoPanel");
+    const customLensInput = document.getElementById("customLensInput");
+    const lensValidation = document.getElementById("lensValidation");
+    const closeChat = document.getElementById("closeChat");
+    const textMode = document.getElementById("textMode");
+    const compileMode = document.getElementById("compileMode");
+    const terminalMode = document.getElementById("terminalMode");
+    const railChat = document.getElementById("railChat");
+    const railHistory = document.getElementById("railHistory");
+    const compileStrip = document.getElementById("compileStrip");
+    const recompileButton = document.getElementById("recompileButton");
+    const zoomButton = document.getElementById("zoomButton");
+    const toolButtons = [textMode, compileMode, terminalMode];
+    const checks = [...document.querySelectorAll(".guard-options input")];
+
+    const initialLatex = `\\documentclass{article}
+\\usepackage{graphicx} % Required for inserting images
+
+\\title{test}
+\\author{}
+\\date{}
+
+\\begin{document}
+
+\\maketitle
+
+\\section{Introduction}
+
+\\end{document}`;
+
+    const exampleLatex = `\\documentclass{article}
+\\usepackage{graphicx} % Required for inserting images
+
+\\title{FocusFlow: An Adaptive AI System Minimizing Digital Distractions via Real-time Eye-tracking}
+\\author{Junseo Jang, Seohyun Kang, Jiyeon Park, Chaeyoung Huh, Jiho Lee}
+
+\\begin{document}
+
+\\maketitle
+
+\\begin{abstract}
+Digital distractions such as notifications, visually salient interface elements, and irrelevant on-screen content often interrupt users' attention during focused tasks. This paper presents FocusFlow, an adaptive AI system that minimizes digital distractions through real-time eye-tracking. The proposed system monitors users' gaze behavior to detect moments of reduced concentration and dynamically responds by blurring non-essential screen elements or suppressing disruptive notifications. Rather than applying static focus modes, FocusFlow aims to provide context-sensitive intervention based on the user's attentional state. We describe the design motivation of the system, its core interaction concept, and its potential to support sustained attention in digitally demanding environments.
+\\end{abstract}
+
+\\section{Introduction}
+Maintaining attention in digital environments has become increasingly difficult as users are constantly exposed to notifications, highlighted interface elements, and competing visual stimuli. Even when users intend to focus on a primary task such as reading, writing, or studying, their attention can easily shift toward irrelevant content on the screen. These repeated interruptions may reduce task efficiency, increase cognitive load, and make it harder for users to return to their original focus.
+
+Existing approaches to distraction reduction often rely on manual settings such as \`\`Do Not Disturb'' modes, notification muting, or full-screen task environments. While these methods can be helpful, they usually apply the same level of restriction regardless of the user's real-time attentional state. As a result, they may either be too passive to prevent distraction or too rigid to adapt to changing task contexts.
+
+In this paper, we propose FocusFlow, an adaptive AI system that uses real-time eye-tracking to detect moments when a user's concentration appears to weaken. When the system identifies signs of attentional drift, it selectively intervenes by blurring visually distracting interface components or temporarily blocking incoming notifications. The goal of FocusFlow is not simply to hide information, but to provide lightweight and timely support that helps users remain engaged with their main task.
+
+Our work is motivated by the idea that distraction management should be responsive rather than static. By using gaze behavior as an interaction signal, FocusFlow seeks to support a more personalized and dynamic form of attention assistance. We explore how such a system can be positioned as an HCI research prototype and how adaptive interface interventions may improve focus in everyday digital work settings.
+
+\\section{Introduction}
+
+\\end{document}`;
+
+    const contexts = [];
+    let selectedText = "";
+    let selectedLens = [];
+    let sent = false;
+    let answerShown = false;
+    let isGeneratingAnswer = false;
+    let chatFlowState = "compose";
+    let originalPrompt = "";
+    let rewrittenPrompt = "";
+    let lastSentPrompt = "";
+    let lastMockResult = null;
+    let activeCitationName = "";
+    const HISTORY_STORAGE_KEY = "wrtEvalChatSessions";
+    let chatSessions = loadChatSessions();
+    let currentMessages = [];
+    let activeSessionId = null;
+    let lastCompileLog = "No compile has been run yet.";
+    let lastCompiledSource = initialLatex;
+    let lastPdfUrl = "";
+    let isCompiling = false;
+    const zoomLevels = [100, 125, 150, 75];
+    let zoomIndex = 0;
+
+    const userPrompt = "이 부분에서 부족한 점이 뭐야?";
+    const safetyLensMockResponses = [
+      {
+        id: "source-citation",
+        label: "Source & Citation Verification Lens",
+        description: "Checks whether claims are supported by credible sources.",
+        rewrittenPrompt: "Evaluate the selected paper section and the user's question while checking whether major claims are properly supported by credible sources. Identify claims that require citations, distinguish between evidence-based statements and unsupported assertions, and suggest where references should be added. Do not invent citations or claim that a source supports something unless it is explicitly provided.",
+        mockResponse: [
+          "Identify unsupported claims about digital distractions, cognitive load, real-time eye-tracking, and adaptive intervention.",
+          "Suggest adding citations from HCI, cognitive psychology, eye-tracking research, and adaptive interface literature.",
+          "Warn that claims about effectiveness should not be presented as proven unless evaluation data exists."
+        ]
+      },
+      {
+        id: "hallucination",
+        label: "Hallucination Detection Lens",
+        description: "Restricts feedback to information present in the selected text.",
+        rewrittenPrompt: "Answer the user's question using only information that is explicitly present in the selected paper section. Detect and flag any statements that go beyond the provided text, are speculative, or would require external evidence. Clearly separate confirmed information from uncertain assumptions. Avoid inventing experimental results, user study findings, citations, system implementation details, or performance metrics.",
+        mockResponse: [
+          "Confirm only what is present in the selected text.",
+          "Flag claims such as improved productivity, reduced cognitive load, accurate attention detection, or user preference as unsupported unless they appear in the selected text.",
+          "Tell the user that the current paper section is mostly conceptual if no evaluation is included."
+        ]
+      },
+      {
+        id: "assumption",
+        label: "Assumption Challenge Lens",
+        description: "Challenges hidden assumptions and weak causal claims.",
+        rewrittenPrompt: "Evaluate the selected paper section by identifying hidden assumptions, weak causal claims, and design choices that are presented as obvious but may require justification. Challenge whether the proposed system's core assumptions are valid, whether alternative explanations exist, and whether the paper needs additional evidence to support its reasoning.",
+        mockResponse: [
+          "Challenge the assumption that gaze behavior reliably indicates reduced concentration.",
+          "Challenge the assumption that blurring interface elements improves focus.",
+          "Challenge the assumption that suppressing notifications is always beneficial.",
+          "Ask whether adaptive focus support is actually better than static focus modes."
+        ]
+      },
+      {
+        id: "over-reliance",
+        label: "Over-reliance Prevention Lens",
+        description: "Checks automation dependency and loss of user control.",
+        rewrittenPrompt: "Evaluate the selected paper section with attention to whether the proposed AI system may encourage users to over-rely on automated decisions or reduce their own control. Identify risks related to automation dependency, loss of user agency, reduced self-regulation, and insufficient transparency. Suggest ways to keep the user in control.",
+        mockResponse: [
+          "Explain that users may become dependent on the system to manage attention.",
+          "Point out risks of reduced user control if the system automatically blurs content or blocks notifications.",
+          "Suggest override controls such as undo blur, allow notification, pause FocusFlow, and sensitivity settings.",
+          "Suggest lightweight explanations when the system intervenes."
+        ]
+      },
+      {
+        id: "privacy",
+        label: "Privacy & Confidentiality Lens",
+        description: "Checks anonymity, confidentiality, and gaze data safeguards.",
+        rewrittenPrompt: "Identify weaknesses while explicitly checking risks related to participant anonymity, confidentiality, data minimization, re-identification, biometric data sensitivity, and unintended disclosure. Avoid suggestions that require unnecessary sensitive data collection, and recommend safeguards for storing, processing, and sharing gaze-related data.",
+        mockResponse: [
+          "Explain that real-time eye-tracking may involve sensitive behavioral or biometric data.",
+          "Ask what gaze data is collected, whether raw gaze data is stored, and how long it is retained.",
+          "Recommend local processing, data minimization, encryption, access control, deletion policies, and avoiding raw gaze data release.",
+          "Mention re-identification risk from gaze patterns."
+        ]
+      },
+      {
+        id: "ethical-bias",
+        label: "Ethical Bias & Representation Lens",
+        description: "Checks representation, accessibility, and fairness concerns.",
+        rewrittenPrompt: "Review whether the research may exclude groups, misrepresent users, reinforce stereotypes, or rely on biased assumptions about attention, productivity, disability, neurodiversity, or digital behavior. Evaluate whether the proposed system works fairly across different users, contexts, devices, and accessibility needs.",
+        mockResponse: [
+          "Explain that attention and gaze behavior vary across individuals.",
+          "Mention neurodiversity and accessibility concerns, including ADHD, autism, visual impairments, fatigue, and different reading behaviors.",
+          "Warn against treating non-standard attention patterns as simply problematic.",
+          "Suggest diverse participant recruitment and careful reporting of demographic and contextual limitations."
+        ]
+      },
+      {
+        id: "custom",
+        label: "Add Custom Lens",
+        description: "Applies the user's custom safety review perspective.",
+        rewrittenPrompt: "Rewrite the user's question according to the custom safety lens provided by the user. Apply the custom lens as the main review perspective while still avoiding unsupported claims, unnecessary sensitive data collection, and overconfident conclusions. Clearly explain how the selected text should be evaluated under this custom perspective.",
+        mockResponse: [
+          "Use the user's custom lens input.",
+          "Generate a short custom rewritten prompt.",
+          "Generate 2-4 mock findings based on the custom lens.",
+          "Example: if the custom lens is Accessibility Lens, discuss blur-based intervention risks, eye-tracking hardware availability, fallback modes, and inclusive interaction design."
+        ]
+      }
+    ];
+
+    const baselineLens = {
+      id: "baseline",
+      label: "Baseline Ethical Review",
+      rewrittenPrompt: "Evaluate the selected paper section and the user's question with a cautious research-review perspective. Identify limitations, missing evidence, overconfident claims, and safety-relevant issues without inventing results, citations, or implementation details.",
+      mockResponse: [
+        "Separate confirmed statements from claims that still need evidence.",
+        "Identify missing evaluation details and possible research limitations.",
+        "Suggest revisions that make the paper more precise and less overconfident."
+      ]
+    };
+
+    latexInput.value = initialLatex;
+
+    function setActive(button) {
+      toolButtons.forEach(item => item.classList.toggle("active", item === button));
+    }
+
+    function showChat(title = "Chat Box") {
+      chat.classList.remove("closed");
+      chat.classList.toggle("history-open", title === "Chat History");
+      stage.classList.remove("chat-hidden");
+      chatTitle.textContent = title;
+    }
+
+    function clearContextSelection() {
+      selectedText = "";
+      addContext.style.display = "none";
+      window.getSelection()?.removeAllRanges();
+      if (latexInput.selectionStart !== latexInput.selectionEnd) {
+        const collapseAt = latexInput.selectionEnd;
+        latexInput.setSelectionRange(collapseAt, collapseAt);
+      }
+    }
+
+    function closePlusMenu() {
+      plusMenu.classList.remove("open");
+    }
+
+    function hideChat(activeButton = textMode) {
+      chat.classList.add("closed");
+      stage.classList.add("chat-hidden");
+      clearContextSelection();
+      closePlusMenu();
+      setActive(activeButton);
+    }
+
+    function showSource(options = {}) {
+      stage.classList.add("source-active");
+      editorShell.classList.remove("preview-mode", "log-mode");
+      editorShell.classList.add("source-mode");
+      sourcePane.style.display = "grid";
+      previewPane.style.display = "none";
+      mainLogPane.style.display = "none";
+      if (options.hideChat !== false) hideChat();
+      updateEditorView();
+      latexInput.focus();
+    }
+
+    function validateLatex(source) {
+      const errors = [];
+      if (!/\\documentclass\{[^{}]+\}/.test(source)) {
+        errors.push("Missing required \\documentclass{...} declaration.");
+      }
+      if (!/\\begin\{document\}/.test(source)) {
+        errors.push("Missing \\begin{document}.");
+      }
+      if (!/\\end\{document\}/.test(source)) {
+        errors.push("Missing \\end{document}.");
+      }
+      const beginCount = (source.match(/\\begin\{/g) || []).length;
+      const endCount = (source.match(/\\end\{/g) || []).length;
+      if (beginCount !== endCount) {
+        errors.push(`Environment mismatch: found ${beginCount} \\begin entries but ${endCount} \\end entries.`);
+      }
+      return errors;
+    }
+
+    function finishCompile(shouldHideChat) {
+      editorShell.classList.remove("log-mode", "source-mode");
+      editorShell.classList.add("preview-mode");
+      lastCompiledSource = latexInput.value;
+      renderPreview(lastCompiledSource);
+      lastCompileLog = [
+        "This is pdfTeX, Version 3.141592653-2.6-1.40.26 (prototype)",
+        "entering extended mode",
+        "(./main.tex",
+        "LaTeX2e <2024-11-01> patch level 2",
+        "Document Class: article 2024/06/29 v1.4n Standard LaTeX document class",
+        "Package graphicx Info: Driver file pdftex.def loaded.",
+        "[1]",
+        "Output written on main.pdf (1 page, 42138 bytes).",
+        "Transcript written on main.log."
+      ].join("\n");
+      terminalMode.classList.add("has-new-log");
+      compileStrip.classList.remove("compiling");
+      recompileButton.disabled = false;
+      isCompiling = false;
+      if (shouldHideChat) hideChat(compileMode);
+    }
+
+    function startCompile(options = {}) {
+      if (isCompiling) return;
+      const shouldHideChat = options.hideChat !== false;
+      isCompiling = true;
+      stage.classList.remove("source-active");
+      setActive(compileMode);
+      editorShell.classList.remove("source-mode", "log-mode");
+      editorShell.classList.add("preview-mode");
+      sourcePane.style.display = "none";
+      previewPane.style.display = "block";
+      mainLogPane.style.display = "none";
+      compiledPaper.style.display = "block";
+      pdfFrame.style.display = "none";
+      compiledPaper.innerHTML = '<p class="compiled-body">Compiling LaTeX source...</p>';
+      compileStrip.classList.add("compiling");
+      recompileButton.disabled = true;
+      if (shouldHideChat) hideChat(compileMode);
+      setTimeout(() => finishCompile(shouldHideChat), 4000);
+    }
+
+    function showPreview(options = {}) {
+      stage.classList.remove("source-active");
+      setActive(compileMode);
+      editorShell.classList.remove("source-mode", "log-mode");
+      editorShell.classList.add("preview-mode");
+      sourcePane.style.display = "none";
+      previewPane.style.display = "block";
+      mainLogPane.style.display = "none";
+      compiledPaper.style.display = "block";
+      pdfFrame.style.display = "none";
+      if (options.hideChat !== false) hideChat(compileMode);
+      renderPreview(lastCompiledSource);
+      applyCitationHighlight();
+    }
+
+    function showTerminal(log = lastCompileLog) {
+      setActive(terminalMode);
+      terminalMode.classList.remove("has-new-log");
+      hideChat(terminalMode);
+      stage.classList.remove("source-active");
+      editorShell.classList.remove("source-mode", "preview-mode");
+      editorShell.classList.add("log-mode");
+      sourcePane.style.display = "none";
+      previewPane.style.display = "none";
+      mainLogPane.style.display = "flex";
+      const text = Array.isArray(log)
+        ? log.map((error, index) => `Error ${index + 1}: ${error}`).join("\n")
+        : String(log || "No compiler log is available.");
+      mainLogBox.textContent = text;
+    }
+
+    function highlightLatex(source) {
+      return source.split("\n").map((line) => {
+        const commentIndex = line.indexOf("%");
+        const body = commentIndex >= 0 ? line.slice(0, commentIndex) : line;
+        const comment = commentIndex >= 0 ? line.slice(commentIndex) : "";
+        let html = escapeHTML(body);
+        const citationTarget = getCitationTargetText(activeCitationName);
+        if (citationTarget) {
+          html = html.replaceAll(
+            escapeHTML(citationTarget),
+            `<span class="citation-hit">${escapeHTML(citationTarget)}</span>`
+          );
+        }
+
+        html = html.replace(/(\\(?:documentclass|usepackage|begin|end|newcommand|renewcommand))(?=({|\\s|$))/g, '<span class="syn-struct">$1</span>');
+        html = html.replace(/(\\(?:title|author|date|section|subsection|textbf|item|maketitle|includegraphics))(?=({|\\s|$))/g, '<span class="syn-command">$1</span>');
+        html = html.replace(/((?:begin|end)<\/span>\{)([^{}]+)(\})/g, '$1<span class="syn-env">$2</span>$3');
+        html = html.replace(/(\$[^$]*\$|\\\[[\s\S]*?\\\])/g, '<span class="syn-math">$1</span>');
+
+        if (comment) {
+          html += `<span class="syn-comment">${escapeHTML(comment)}</span>`;
+        }
+        return html || " ";
+      }).join("\n");
+    }
+
+    function measureLineHeight(line, width) {
+      const measure = document.createElement("div");
+      measure.style.position = "absolute";
+      measure.style.visibility = "hidden";
+      measure.style.pointerEvents = "none";
+      measure.style.boxSizing = "border-box";
+      measure.style.width = `${Math.max(width, 1)}px`;
+      measure.style.font = getComputedStyle(latexInput).font;
+      measure.style.lineHeight = getComputedStyle(latexInput).lineHeight;
+      measure.style.whiteSpace = "pre-wrap";
+      measure.style.overflowWrap = "break-word";
+      measure.style.wordBreak = "normal";
+      measure.textContent = line || " ";
+      document.body.appendChild(measure);
+      const height = Math.max(parseFloat(getComputedStyle(latexInput).lineHeight), measure.scrollHeight);
+      measure.remove();
+      return height;
+    }
+
+    function updateLineNumbers() {
+      const lines = latexInput.value.split("\n");
+      const width = latexInput.clientWidth;
+      const lineHeight = parseFloat(getComputedStyle(latexInput).lineHeight);
+      lineNumbers.innerHTML = lines.map((_, index) => {
+        const height = measureLineHeight(lines[index], width);
+        return `<div style="height:${height}px;line-height:${lineHeight}px">${index + 1}</div>`;
+      }).join("");
+      lineNumbers.scrollTop = latexInput.scrollTop;
+    }
+
+    function updateHighlight() {
+      highlightLayer.innerHTML = highlightLatex(latexInput.value);
+      highlightLayer.style.transform = `translate(${-latexInput.scrollLeft}px, ${-latexInput.scrollTop}px)`;
+    }
+
+    function getCitationTargetText(name) {
+      if (name === "responsive") {
+        return "By using gaze behavior as an interaction signal, FocusFlow seeks to support a more personalized and dynamic form of attention assistance.";
+      }
+      if (name === "gaze") {
+        return "monitors users' gaze behavior to detect moments of reduced concentration";
+      }
+      return "";
+    }
+
+    function updateEditorView() {
+      updateHighlight();
+      updateLineNumbers();
+    }
+
+    function escapeHTML(value) {
+      return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function matchLatex(command, text) {
+      const pattern = new RegExp("\\\\" + command + "\\{([\\s\\S]*?)\\}");
+      const result = text.match(pattern);
+      return result ? result[1].trim() : "";
+    }
+
+    function matchEnvironment(name, text) {
+      const pattern = new RegExp("\\\\begin\\{" + name + "\\}([\\s\\S]*?)\\\\end\\{" + name + "\\}");
+      const result = text.match(pattern);
+      return result ? result[1].trim() : "";
+    }
+
+    function stripLatex(text) {
+      return text
+        .replace(/\\maketitle/g, "")
+        .replace(/\\end\{document\}/g, "")
+        .replace(/``/g, "\"")
+        .replace(/''/g, "\"")
+        .replace(/\\[a-zA-Z]+\*?(?:\{([^{}]*)\})?/g, (_, group) => group || "")
+        .replace(/[{}]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function markCitations(text) {
+      let html = escapeHTML(text);
+      html = html.replace(
+        /monitors users' gaze behavior to detect moments of reduced concentration/g,
+        "<span data-cite=\"gaze\">monitors users' gaze behavior to detect moments of reduced concentration</span>"
+      );
+      html = html.replace(
+        /By using gaze behavior as an interaction signal, FocusFlow seeks to support a more personalized and dynamic form of attention assistance\./g,
+        "<span data-cite=\"responsive\">By using gaze behavior as an interaction signal, FocusFlow seeks to support a more personalized and dynamic form of attention assistance.</span>"
+      );
+      return html;
+    }
+
+    function renderPreview(source = lastCompiledSource) {
+      const title = stripLatex(matchLatex("title", source)) || "Untitled";
+      const author = stripLatex(matchLatex("author", source));
+      const date = stripLatex(matchLatex("date", source));
+      const abstract = stripLatex(matchEnvironment("abstract", source));
+      const afterAbstract = source.split(/\\end\{abstract\}/)[1] || source;
+      const sectionParts = afterAbstract.split(/\\section\{([^{}]+)\}/g).slice(1);
+
+      let html = `<h2 class="compiled-title">${escapeHTML(title)}</h2>`;
+      if (author) html += `<div class="compiled-authors">${escapeHTML(author)}</div>`;
+      if (date) html += `<div class="compiled-date">${escapeHTML(date)}</div>`;
+      if (abstract) {
+        html += `<div class="abstract-title">Abstract</div><p class="compiled-abstract">${markCitations(abstract)}</p>`;
+      }
+
+      for (let i = 0; i < sectionParts.length; i += 2) {
+        const sectionTitle = stripLatex(sectionParts[i]);
+        const body = stripLatex(sectionParts[i + 1] || "");
+        if (!sectionTitle) continue;
+        html += `<h3 class="compiled-section"><span>${i / 2 + 1}</span><span>${escapeHTML(sectionTitle)}</span></h3>`;
+        if (body) html += `<p class="compiled-body">${markCitations(body)}</p>`;
+      }
+
+      compiledPaper.innerHTML = html;
+    }
+
+    function textClip(text, max = 118) {
+      const clean = text.replace(/\s+/g, " ").trim();
+      return clean.length > max ? `${clean.slice(0, max)} ...` : clean;
+    }
+
+    function canAddContext() {
+      const chatBoxOpen = !chat.classList.contains("closed") && chatTitle.textContent === "Chat Box";
+      return chatBoxOpen && textMode.classList.contains("active") && sourcePane.style.display !== "none";
+    }
+
+    function getTextareaCaretPoint(textarea, index) {
+      const rect = textarea.getBoundingClientRect();
+      const style = getComputedStyle(textarea);
+      const mirror = document.createElement("div");
+      const marker = document.createElement("span");
+      mirror.style.position = "fixed";
+      mirror.style.left = `${rect.left - textarea.scrollLeft}px`;
+      mirror.style.top = `${rect.top - textarea.scrollTop}px`;
+      mirror.style.width = `${rect.width}px`;
+      mirror.style.minHeight = `${rect.height}px`;
+      mirror.style.padding = style.padding;
+      mirror.style.border = style.border;
+      mirror.style.boxSizing = style.boxSizing;
+      mirror.style.font = style.font;
+      mirror.style.lineHeight = style.lineHeight;
+      mirror.style.letterSpacing = style.letterSpacing;
+      mirror.style.whiteSpace = "pre-wrap";
+      mirror.style.overflowWrap = "break-word";
+      mirror.style.wordBreak = style.wordBreak;
+      mirror.style.visibility = "hidden";
+      mirror.style.pointerEvents = "none";
+      mirror.style.zIndex = "-1";
+      mirror.textContent = textarea.value.slice(0, index);
+      marker.textContent = "\u200b";
+      mirror.appendChild(marker);
+      document.body.appendChild(mirror);
+      const markerRect = marker.getBoundingClientRect();
+      mirror.remove();
+      return markerRect;
+    }
+
+    function placeAddButtonFromTextarea() {
+      const rect = latexInput.getBoundingClientRect();
+      const caretRect = getTextareaCaretPoint(latexInput, latexInput.selectionEnd);
+      const left = Math.max(rect.left + 8, Math.min(caretRect.left - 18, rect.right - 146, window.innerWidth - 150));
+      const top = Math.max(rect.top + 8, Math.min(caretRect.bottom + 4, rect.bottom - 36, window.innerHeight - 40));
+      addContext.style.left = `${left}px`;
+      addContext.style.top = `${top}px`;
+      addContext.style.display = "inline-flex";
+    }
+
+    function updateSelectedText() {
+      if (!canAddContext()) {
+        addContext.style.display = "none";
+        return;
+      }
+      const start = latexInput.selectionStart;
+      const end = latexInput.selectionEnd;
+      if (end <= start) {
+        selectedText = "";
+        addContext.style.display = "none";
+        return;
+      }
+      selectedText = latexInput.value.slice(start, end).replace(/\s+/g, " ").trim();
+      if (selectedText.length > 4) {
+        placeAddButtonFromTextarea();
+      } else {
+        addContext.style.display = "none";
+      }
+    }
+
+    latexInput.addEventListener("input", updateEditorView);
+    latexInput.addEventListener("scroll", () => {
+      lineNumbers.scrollTop = latexInput.scrollTop;
+      updateHighlight();
+    });
+    latexInput.addEventListener("mouseup", updateSelectedText);
+    latexInput.addEventListener("keyup", updateSelectedText);
+    window.addEventListener("resize", updateEditorView);
+
+    document.addEventListener("selectionchange", () => {
+      if (!canAddContext()) {
+        addContext.style.display = "none";
+        return;
+      }
+      if (sourcePane.style.display !== "none") return;
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+        addContext.style.display = "none";
+        return;
+      }
+      const range = selection.getRangeAt(0);
+      if (!compiledPaper.contains(range.commonAncestorContainer)) {
+        addContext.style.display = "none";
+        return;
+      }
+      selectedText = selection.toString().replace(/\s+/g, " ").trim();
+      if (selectedText.length <= 4) {
+        addContext.style.display = "none";
+        return;
+      }
+      const rect = range.getBoundingClientRect();
+      addContext.style.left = `${Math.max(12, Math.min(rect.right - 8, window.innerWidth - 150))}px`;
+      addContext.style.top = `${rect.bottom + 3}px`;
+      addContext.style.display = "inline-flex";
+    });
+
+    document.addEventListener("mousedown", (event) => {
+      if (!addContext.contains(event.target)) addContext.style.display = "none";
+    });
+
+    addContext.addEventListener("click", () => {
+      if (selectedText) addContextChip(selectedText);
+      clearContextSelection();
+    });
+
+    function addContextChip(text) {
+      showChat("Chat Box");
+      composerShell.style.display = "flex";
+      if (!contexts.includes(text)) contexts.unshift(text);
+      renderContext();
+    }
+
+    function renderContext() {
+      contextList.innerHTML = "";
+      contexts.forEach((text, index) => {
+        const chip = document.createElement("div");
+        chip.className = "context-chip";
+        chip.textContent = textClip(text);
+        chip.title = "Click to highlight source text";
+        chip.addEventListener("click", () => highlightCitation(text.includes("personalized") ? "responsive" : "gaze"));
+        const x = document.createElement("button");
+        x.className = "remove-chip";
+        x.type = "button";
+        x.textContent = "×";
+        x.addEventListener("click", (event) => {
+          event.stopPropagation();
+          contexts.splice(index, 1);
+          renderContext();
+        });
+        chip.appendChild(x);
+        contextList.appendChild(chip);
+      });
+    }
+
+    plus.addEventListener("click", (event) => {
+      event.stopPropagation();
+      guardTip.style.display = "none";
+      guardPanel.classList.remove("open");
+      plusMenu.classList.toggle("open");
+    });
+    plusMenu.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+    addFilesOption.addEventListener("click", () => {
+      closePlusMenu();
+    });
+    openLensOption.addEventListener("click", () => {
+      closePlusMenu();
+      openLensOptions();
+    });
+    lensInfoToggle.addEventListener("click", () => {
+      lensInfoPanel.classList.toggle("open");
+    });
+    document.addEventListener("click", (event) => {
+      if (!plusMenu.contains(event.target) && event.target !== plus) closePlusMenu();
+    });
+    guardBack.addEventListener("click", () => {
+      guardPanel.classList.remove("open");
+      chatFlowState = "compose";
+      setComposerReviewMode(false);
+    });
+    checks.forEach(check => {
+      check.addEventListener("change", () => {
+        updateSelectedLensState();
+      });
+    });
+    customLensInput.addEventListener("input", () => {
+      if (chatFlowState === "lens") updateSelectedLensState();
+    });
+
+    applyGuard.addEventListener("click", () => {
+      if (!validateLensSelection()) return;
+      applyLensRewrite();
+      guardPanel.classList.remove("open");
+      openReviewCard(rewrittenPrompt);
+    });
+
+    promptBox.addEventListener("input", () => {
+      sent = false;
+      if (chatFlowState !== "lens") {
+        setComposerReviewMode(false);
+        chatFlowState = "compose";
+        originalPrompt = "";
+        rewrittenPrompt = "";
+        selectedLens = [];
+        checks.forEach(item => item.checked = false);
+      }
+      autoSizePrompt();
+    });
+
+    function autoSizePrompt() {
+      const isReviewing = composer.classList.contains("reviewing");
+      const minPromptHeight = isReviewing ? 122 : 26;
+      const maxPromptHeight = isReviewing ? 360 : 164;
+      promptBox.style.height = `${minPromptHeight}px`;
+      const nextHeight = Math.min(Math.max(promptBox.scrollHeight, minPromptHeight), maxPromptHeight);
+      promptBox.style.height = `${nextHeight}px`;
+      promptBox.style.overflowY = promptBox.scrollHeight > maxPromptHeight ? "auto" : "hidden";
+    }
+
+    function getLensDefinition(id) {
+      return safetyLensMockResponses.find(lens => lens.id === id);
+    }
+
+    function getSelectedPaperText() {
+      return contexts.length
+        ? contexts.join("\n\n")
+        : "No specific paper section was added as context.";
+    }
+
+    function getAppliedLensDefinitions(selectedLensIds) {
+      const lensDefinitions = selectedLensIds.map(getLensDefinition).filter(Boolean);
+      return lensDefinitions.length ? lensDefinitions : [baselineLens];
+    }
+
+    function buildFinalRewrittenPrompt(userQuestion, selectedTextForPrompt, selectedLensIds, customLensText) {
+      const lensDefinitions = getAppliedLensDefinitions(selectedLensIds);
+      const lensInstructions = lensDefinitions.map((lens) => {
+        const customLine = lens.id === "custom" && customLensText
+          ? ` Custom lens provided by user: ${customLensText}.`
+          : "";
+        return `* ${lens.label}: ${lens.rewrittenPrompt}${customLine}`;
+      }).join("\n");
+
+      return `User question:
+${userQuestion}
+
+Selected paper text:
+${selectedTextForPrompt}
+
+Apply the following safety lenses:
+${lensInstructions}
+
+Task:
+Answer the user's question by applying all selected safety lenses.
+Separate the response into:
+1. Main answer
+2. Safety-related limitations
+3. Suggested revisions
+4. Unsupported claims or risks to avoid`;
+    }
+
+    function validateLensSelection(showMessage = true) {
+      const customSelected = checks.some(item => item.value === "custom" && item.checked);
+      const customLensText = customLensInput.value.trim();
+      const invalid = customSelected && !customLensText;
+      lensValidation.textContent = invalid ? "Enter a custom lens before applying this option." : "";
+      lensValidation.style.display = invalid && showMessage ? "block" : "none";
+      return !invalid;
+    }
+
+    function generateMockLLMResponse({ selectedText: sourceText, userQuestion, selectedLensIds, customLensText }) {
+      const lensDefinitions = getAppliedLensDefinitions(selectedLensIds);
+      const appliedLenses = lensDefinitions.map((lens) => (
+        lens.id === "custom" && customLensText ? `${lens.label}: ${customLensText}` : lens.label
+      ));
+      const finalPrompt = buildFinalRewrittenPrompt(userQuestion, sourceText, selectedLensIds, customLensText);
+      const safetyFindings = lensDefinitions.map((lens) => {
+        const findings = lens.id === "custom" && customLensText
+          ? [
+            `Apply the custom perspective "${customLensText}" to the selected section before making improvement suggestions.`,
+            "Check that the feedback stays grounded in the selected text and does not invent missing study results.",
+            "Identify 2-4 concrete revision opportunities that match the custom perspective.",
+            "Avoid overconfident conclusions that would require new evidence."
+          ]
+          : lens.mockResponse;
+        return { lens: lens.label, findings };
+      });
+
+      return {
+        originalQuestion: userQuestion,
+        selectedText: sourceText,
+        appliedLenses,
+        rewrittenPrompt: finalPrompt,
+        mainAnswer: "The selected section can be improved by making the research claims more precise, separating conceptual motivation from evaluated results, and explicitly stating what evidence is still missing. The feedback below is limited to the selected text and does not assume that an experiment, user study, or performance result already exists.",
+        safetyFindings,
+        suggestedRevisions: [
+          "Add a short limitation sentence clarifying that the current section describes the system concept unless evaluation data is provided elsewhere.",
+          "Specify what evidence would be needed to support claims about attention, focus improvement, or reduced cognitive load.",
+          "Describe user control mechanisms such as pause, undo, sensitivity adjustment, or explanation of interventions.",
+          "State how gaze-related data would be minimized, protected, and separated from personally identifiable information."
+        ],
+        unsupportedClaimsToAvoid: [
+          "Do not claim that FocusFlow improves productivity unless a study result is provided.",
+          "Do not claim that gaze behavior always indicates reduced concentration.",
+          "Do not invent citations, participant numbers, statistical results, or implementation details.",
+          "Do not recommend collecting additional sensitive gaze data unless it is necessary and justified."
+        ]
+      };
+    }
+
+    function inferCitationTarget(text) {
+      const normalized = text.toLowerCase();
+      if (/personalized|dynamic|attention assistance|context-sensitive|responsive/.test(normalized)) return "responsive";
+      if (/gaze|eye-tracking|attention|concentration|focus|cognitive load|biometric/.test(normalized)) return "gaze";
+      return "";
+    }
+
+    function eyeIcon(hidden = true) {
+      const slash = hidden ? '<path d="M4 20 20 4"/>' : "";
+      return `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M2.5 12s3.5-5.5 9.5-5.5 9.5 5.5 9.5 5.5-3.5 5.5-9.5 5.5S2.5 12 2.5 12Z"/>
+          <path d="M12 9.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"/>
+          ${slash}
+        </svg>`;
+    }
+
+    function clearEvidenceButtons() {
+      chatBody.querySelectorAll(".evidence-button").forEach((button) => {
+        button.classList.remove("active");
+        button.innerHTML = eyeIcon(true);
+      });
+    }
+
+    function clearCitationHighlight() {
+      activeCitationName = "";
+      compiledPaper.querySelectorAll(".citation-hit").forEach(node => node.classList.remove("citation-hit"));
+      updateHighlight();
+    }
+
+    function applyCitationHighlight() {
+      compiledPaper.querySelectorAll(".citation-hit").forEach(node => node.classList.remove("citation-hit"));
+      updateHighlight();
+      if (!activeCitationName) return;
+      const target = compiledPaper.querySelector(`[data-cite="${activeCitationName}"]`);
+      if (target) target.classList.add("citation-hit");
+    }
+
+    function createEvidenceButton(citeName) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "evidence-button";
+      button.setAttribute("aria-label", "Show source context");
+      button.innerHTML = eyeIcon(true);
+      button.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const isActive = button.classList.contains("active");
+        if (isActive) {
+          clearEvidenceButtons();
+          clearCitationHighlight();
+          return;
+        }
+        clearEvidenceButtons();
+        button.classList.add("active");
+        button.innerHTML = eyeIcon(false);
+        highlightCitation(citeName);
+      });
+      return button;
+    }
+
+    function appendEvidenceText(parent, text, options = {}) {
+      const row = document.createElement("div");
+      row.className = "evidence-row";
+      const content = document.createElement("span");
+      content.textContent = text;
+      row.appendChild(content);
+      const citeName = options.cite || inferCitationTarget(text);
+      if (citeName) row.appendChild(createEvidenceButton(citeName));
+      parent.appendChild(row);
+    }
+
+    function appendList(parent, items) {
+      const list = document.createElement("ul");
+      items.forEach((item) => {
+        const li = document.createElement("li");
+        appendEvidenceText(li, item);
+        list.appendChild(li);
+      });
+      parent.appendChild(list);
+    }
+
+    function renderMockResult(result) {
+      const card = document.createElement("div");
+      card.className = "mock-result";
+
+      const main = document.createElement("section");
+      main.className = "result-section";
+      main.innerHTML = "<h4>Main answer</h4>";
+      const mainText = document.createElement("div");
+      appendEvidenceText(mainText, result.mainAnswer);
+      main.appendChild(mainText);
+      card.appendChild(main);
+
+      const findings = document.createElement("section");
+      findings.className = "result-section";
+      findings.innerHTML = "<h4>Safety-related limitations</h4>";
+      result.safetyFindings.forEach((group) => {
+        const title = document.createElement("p");
+        title.innerHTML = `<strong>${escapeHTML(group.lens)}</strong>`;
+        findings.appendChild(title);
+        appendList(findings, group.findings);
+      });
+      card.appendChild(findings);
+
+      const revisions = document.createElement("section");
+      revisions.className = "result-section";
+      revisions.innerHTML = "<h4>Suggested revisions</h4>";
+      appendList(revisions, result.suggestedRevisions);
+      card.appendChild(revisions);
+
+      const unsupported = document.createElement("section");
+      unsupported.className = "result-section";
+      unsupported.innerHTML = "<h4>Unsupported claims or risks to avoid</h4>";
+      appendList(unsupported, result.unsupportedClaimsToAvoid);
+      card.appendChild(unsupported);
+
+      return card;
+    }
+
+    sendButton.addEventListener("click", () => {
+      showChat("Chat Box");
+      composerShell.style.display = "flex";
+      if (!promptBox.value.trim()) {
+        promptBox.focus();
+        autoSizePrompt();
+        return;
+      }
+      if (chatFlowState === "compose") {
+        openLensOptions();
+        return;
+      }
+      if (chatFlowState === "lens") {
+        if (!validateLensSelection()) return;
+        applyLensRewrite();
+        guardPanel.classList.remove("open");
+        openReviewCard(rewrittenPrompt);
+        return;
+      }
+      if (chatFlowState === "review") {
+        return;
+      }
+      sendPrompt();
+    });
+
+    function openLensOptions() {
+      closePlusMenu();
+      guardTip.style.display = "none";
+      setComposerReviewMode(false);
+      showChat("Chat Box");
+      composerShell.style.display = "flex";
+      if (chatFlowState !== "lens") {
+        originalPrompt = promptBox.value.trim() || userPrompt;
+      }
+      chatFlowState = "lens";
+      guardPanel.classList.add("open");
+      updateSelectedLensState();
+    }
+
+    function updateSelectedLensState() {
+      selectedLens = checks.filter(item => item.checked).map(item => item.value);
+      applyGuard.classList.add("enabled");
+      if (!originalPrompt) originalPrompt = promptBox.value.trim() || userPrompt;
+      validateLensSelection(false);
+    }
+
+    function applyLensRewrite() {
+      updateSelectedLensState();
+      rewrittenPrompt = buildFinalRewrittenPrompt(originalPrompt, getSelectedPaperText(), selectedLens, customLensInput.value.trim());
+      promptBox.value = rewrittenPrompt;
+      autoSizePrompt();
+    }
+
+    function openReviewCard(text) {
+      chatFlowState = "review";
+      promptBox.value = text;
+      setComposerReviewMode(true);
+      autoSizePrompt();
+    }
+
+    function setComposerReviewMode(isReviewing) {
+      composer.classList.toggle("reviewing", isReviewing);
+    }
+
+    acceptRewrite.addEventListener("click", () => {
+      rewrittenPrompt = promptBox.value;
+      originalPrompt = "";
+      chatFlowState = "ready";
+      setComposerReviewMode(false);
+      autoSizePrompt();
+      promptBox.focus();
+    });
+
+    declineRewrite.addEventListener("click", () => {
+      promptBox.value = originalPrompt || "";
+      rewrittenPrompt = "";
+      selectedLens = [];
+      checks.forEach(item => item.checked = false);
+      lensValidation.style.display = "none";
+      chatFlowState = "compose";
+      setComposerReviewMode(false);
+      autoSizePrompt();
+      promptBox.focus();
+    });
+
+    function contextPreview(text) {
+      const chip = document.createElement("div");
+      chip.className = "context-chip";
+      chip.textContent = textClip(text);
+      chip.addEventListener("click", () => highlightCitation(text.includes("personalized") ? "responsive" : "gaze"));
+      const x = document.createElement("button");
+      x.className = "remove-chip";
+      x.type = "button";
+      x.textContent = "×";
+      chip.appendChild(x);
+      return chip;
+    }
+
+    function sendPrompt() {
+      if (isGeneratingAnswer) return;
+      const questionToSend = promptBox.value.trim() || originalPrompt || userPrompt;
+      if (!questionToSend) return;
+      if (!validateLensSelection()) {
+        chatFlowState = "lens";
+        guardPanel.classList.add("open");
+        return;
+      }
+      lastSentPrompt = questionToSend;
+      const pendingResult = generateMockLLMResponse({
+        selectedText: getSelectedPaperText(),
+        userQuestion: questionToSend,
+        selectedLensIds: selectedLens,
+        customLensText: customLensInput.value.trim()
+      });
+      chatBody.appendChild(createUserMessage(lastSentPrompt));
+      const typing = createTypingMessage();
+      chatBody.appendChild(typing);
+      chatBody.scrollTop = chatBody.scrollHeight;
+      isGeneratingAnswer = true;
+      sent = true;
+      answerShown = false;
+      chatFlowState = "generating";
+      setComposerReviewMode(false);
+      guardPanel.classList.remove("open");
+      promptBox.value = "";
+      originalPrompt = "";
+      rewrittenPrompt = "";
+      autoSizePrompt();
+      setTimeout(() => {
+        lastMockResult = pendingResult;
+        currentMessages.push({
+          prompt: lastSentPrompt,
+          result: lastMockResult
+        });
+        isGeneratingAnswer = false;
+        answerShown = true;
+        chatFlowState = "answered";
+        renderConversation();
+      }, 2000);
+    }
+
+    function createUserMessage(text) {
+      const user = document.createElement("div");
+      user.className = "message user";
+      user.textContent = text;
+      return user;
+    }
+
+    function createTypingMessage() {
+      const typing = document.createElement("div");
+      typing.className = "typing-message";
+      typing.innerHTML = 'Generating answer<span class="typing-dots"><span></span><span></span><span></span></span>';
+      return typing;
+    }
+
+    function renderAnsweredChat() {
+      if (currentMessages.length) {
+        renderConversation();
+        return;
+      }
+      if (!lastSentPrompt || !lastMockResult) return;
+      chatBody.innerHTML = "";
+      chatBody.append(createUserMessage(lastSentPrompt), renderMockResult(lastMockResult));
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function renderConversation() {
+      chatBody.innerHTML = "";
+      currentMessages.forEach((message) => {
+        chatBody.append(createUserMessage(message.prompt), renderMockResult(message.result));
+      });
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function loadChatSessions() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || "[]");
+        return Array.isArray(saved) ? saved : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function persistChatSessions() {
+      localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(chatSessions));
+    }
+
+    function sessionTitle(messages) {
+      const latestAnswer = messages.at(-1)?.result?.mainAnswer || messages[0]?.result?.mainAnswer || "Saved review";
+      const summary = latestAnswer
+        .replace(/\s+/g, " ")
+        .replace(/^The selected section can be improved by\s*/i, "Improve claims by ")
+        .trim();
+      return summary.length > 42 ? `${summary.slice(0, 42)}...` : summary;
+    }
+
+    function sessionDate() {
+      return "June, 3rd";
+    }
+
+    function saveCurrentSession() {
+      if (!currentMessages.length) return;
+      const snapshot = {
+        id: activeSessionId || `chat-${Date.now()}`,
+        title: sessionTitle(currentMessages),
+        date: sessionDate(),
+        messages: JSON.parse(JSON.stringify(currentMessages)),
+        contexts: [...contexts]
+      };
+      const existingIndex = chatSessions.findIndex(session => session.id === snapshot.id);
+      if (existingIndex >= 0) chatSessions.splice(existingIndex, 1);
+      chatSessions.unshift(snapshot);
+      activeSessionId = snapshot.id;
+      persistChatSessions();
+    }
+
+    function resetCurrentChat() {
+      currentMessages = [];
+      activeSessionId = null;
+      lastSentPrompt = "";
+      lastMockResult = null;
+      sent = false;
+      answerShown = false;
+      isGeneratingAnswer = false;
+      chatFlowState = "compose";
+      originalPrompt = "";
+      rewrittenPrompt = "";
+      selectedLens = [];
+      checks.forEach(item => item.checked = false);
+      contexts.splice(0, contexts.length);
+      renderContext();
+      chatBody.innerHTML = "";
+      promptBox.value = "";
+      setComposerReviewMode(false);
+      guardPanel.classList.remove("open");
+      autoSizePrompt();
+    }
+
+    function restoreChatSession(sessionId) {
+      const session = chatSessions.find(item => item.id === sessionId);
+      if (!session) return;
+      activeSessionId = session.id;
+      currentMessages = JSON.parse(JSON.stringify(session.messages || []));
+      contexts.splice(0, contexts.length, ...(session.contexts || []));
+      renderContext();
+      lastSentPrompt = currentMessages.at(-1)?.prompt || "";
+      lastMockResult = currentMessages.at(-1)?.result || null;
+      sent = Boolean(currentMessages.length);
+      answerShown = Boolean(currentMessages.length);
+      isGeneratingAnswer = false;
+      chatFlowState = "compose";
+      originalPrompt = "";
+      rewrittenPrompt = "";
+      selectedLens = [];
+      checks.forEach(item => item.checked = false);
+      promptBox.value = "";
+      setComposerReviewMode(false);
+      guardPanel.classList.remove("open");
+      showChat("Chat Box");
+      composerShell.style.display = "flex";
+      renderConversation();
+      autoSizePrompt();
+    }
+
+    function handleCloseChat() {
+      if (!chat.classList.contains("history-open")) {
+        saveCurrentSession();
+        resetCurrentChat();
+      }
+      showSource();
+    }
+
+    function highlightCitation(name) {
+      activeCitationName = name;
+      showChat("Chat Box");
+      composerShell.style.display = "flex";
+      applyCitationHighlight();
+      const targetText = getCitationTargetText(name);
+      const targetIndex = latexInput.value.indexOf(targetText);
+      if (targetIndex >= 0 && sourcePane.style.display !== "none") {
+        const before = latexInput.value.slice(0, targetIndex);
+        const line = before.split("\n").length - 1;
+        latexInput.scrollTop = Math.max(0, line * 24 - 120);
+        lineNumbers.scrollTop = latexInput.scrollTop;
+        updateHighlight();
+      } else if (targetIndex >= 0) {
+        showSource({ hideChat: false });
+        showChat("Chat Box");
+        composerShell.style.display = "flex";
+        const before = latexInput.value.slice(0, targetIndex);
+        const line = before.split("\n").length - 1;
+        latexInput.scrollTop = Math.max(0, line * 24 - 120);
+        lineNumbers.scrollTop = latexInput.scrollTop;
+        updateHighlight();
+      }
+    }
+
+    function showHistory() {
+      showChat("Chat History");
+      composerShell.style.display = "none";
+      chatBody.innerHTML = "";
+      chatSessions.forEach((session) => {
+        const row = document.createElement("div");
+        row.className = "history-row";
+        row.innerHTML = `<strong>${escapeHTML(sessionTitle(session.messages || []))}</strong><span class="history-date">${escapeHTML(session.date)}</span>`;
+        row.addEventListener("click", () => restoreChatSession(session.id));
+        chatBody.appendChild(row);
+      });
+      setActive(textMode);
+    }
+
+    textMode.addEventListener("click", showSource);
+    compileMode.addEventListener("click", () => showPreview());
+    recompileButton.addEventListener("click", () => startCompile());
+    terminalMode.addEventListener("click", () => showTerminal());
+    railChat.addEventListener("click", () => {
+      showChat("Chat Box");
+      composerShell.style.display = "flex";
+      setActive(textMode);
+    });
+    railHistory.addEventListener("click", showHistory);
+    closeChat.addEventListener("click", handleCloseChat);
+    zoomButton.addEventListener("click", () => {
+      zoomIndex = (zoomIndex + 1) % zoomLevels.length;
+      const zoom = zoomLevels[zoomIndex];
+      const codeSize = 20 * zoom / 100;
+      const codeLineHeight = 24 * zoom / 100;
+      const logSize = 16 * zoom / 100;
+      const logLineHeight = 21.6 * zoom / 100;
+      zoomButton.textContent = `${zoom}%`;
+      compiledPaper.style.transform = `scale(${zoom / 100})`;
+      compiledPaper.style.transformOrigin = "top center";
+      editorWrap.style.fontSize = `${codeSize}px`;
+      editorWrap.style.lineHeight = `${codeLineHeight}px`;
+      lineNumbers.style.fontSize = `${codeSize}px`;
+      lineNumbers.style.lineHeight = `${codeLineHeight}px`;
+      mainLogBox.style.fontSize = `${logSize}px`;
+      mainLogBox.style.lineHeight = `${logLineHeight}px`;
+      updateEditorView();
+    });
+    updateEditorView();
+    autoSizePrompt();
+  </script>
+</body>
+</html>
