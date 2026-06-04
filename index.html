@@ -703,6 +703,22 @@
       background: #f7f7f7;
     }
 
+    .start-new-chat {
+      align-self: flex-start;
+      margin: 4px 0 14px 13px;
+      border: 1px solid #d0d0d0;
+      border-radius: 18px;
+      background: #f1f1f1;
+      color: #111;
+      padding: 8px 14px;
+      font: 800 13px/1 Arial, Helvetica, sans-serif;
+      cursor: pointer;
+    }
+
+    .start-new-chat:hover {
+      background: #e5e5e5;
+    }
+
     .history-date {
       margin-left: auto;
       color: #9c9c9c;
@@ -1654,7 +1670,7 @@ Our work is motivated by the idea that distraction management should be responsi
     let lastMockResult = null;
     let activeCitationName = "";
     const HISTORY_STORAGE_KEY = "wrtEvalChatSessions";
-    let chatSessions = loadChatSessions();
+    let chatSessions = [];
     let currentMessages = [];
     let activeSessionId = null;
     let lastCompileLog = "No compile has been run yet.";
@@ -1876,6 +1892,8 @@ The evaluation should include diverse users and should not treat one attention p
         "Suggest revisions that make the paper more precise and less overconfident."
       ]
     };
+
+    chatSessions = loadChatSessions();
 
     latexInput.value = initialLatex;
 
@@ -2413,6 +2431,31 @@ The evaluation should include diverse users and should not treat one attention p
       }).join("\n\n");
     }
 
+    function normalizeLensPrompt(text) {
+      let normalized = String(text || "");
+      const wrappedMatch = normalized.match(/Apply the following safety lenses:\s*([\s\S]*?)\n\s*Task:/i);
+      if (wrappedMatch) normalized = wrappedMatch[1];
+      normalized = normalized
+        .split(/\n+/)
+        .map(line => line.replace(/^\*\s*[^:]+:\s*/, "").trim())
+        .filter(Boolean)
+        .join("\n\n")
+        .trim();
+      return normalized || String(text || "");
+    }
+
+    function normalizeSession(session) {
+      const next = { ...session };
+      next.messages = (session.messages || []).map((message) => {
+        const prompt = normalizeLensPrompt(message.prompt);
+        const result = message.result ? { ...message.result } : message.result;
+        if (result?.rewrittenPrompt) result.rewrittenPrompt = normalizeLensPrompt(result.rewrittenPrompt);
+        return { ...message, prompt, result };
+      });
+      next.title = sessionTitle(next.messages);
+      return next;
+    }
+
     function validateLensSelection(showMessage = true) {
       const customSelected = checks.some(item => item.value === "custom" && item.checked);
       const customLensText = customLensInput.value.trim();
@@ -2796,6 +2839,7 @@ The evaluation should include diverse users and should not treat one attention p
         chatFlowState = "ready";
         safetyLensVisited = true;
         setSendArrow("up");
+        saveCurrentSession();
         renderConversation();
       }, 2000);
     }
@@ -2833,12 +2877,72 @@ The evaluation should include diverse users and should not treat one attention p
       chatBody.scrollTop = chatBody.scrollHeight;
     }
 
+    function getDefaultChatSessions() {
+      const introContext = "Maintaining attention in digital environments has become increasingly difficult as users are constantly exposed to notifications, highlighted interface elements, and competing visual stimuli. Even when users intend to focus on a primary task such as reading, writing, or studying, their attention can easily shift toward irrelevant content on the screen.";
+      const existingContext = "Existing approaches to distraction reduction often rely on manual settings such as ``Do Not Disturb'' modes, notification muting, or full-screen task environments.";
+      const sourcePrompt = buildFinalRewrittenPrompt("What are the limitations?", introContext, ["source-citation"], "");
+      const privacyPrompt = buildFinalRewrittenPrompt("What risks should be checked?", introContext, ["privacy"], "");
+      const overReliancePrompt = buildFinalRewrittenPrompt("What should be improved?", existingContext, ["over-reliance"], "");
+      return [
+        {
+          id: "dummy-source-citation",
+          title: shortHistoryTitle(sourcePrompt),
+          date: "June, 3rd",
+          contexts: [introContext],
+          messages: [{
+            prompt: sourcePrompt,
+            result: generateMockLLMResponse({
+              selectedText: introContext,
+              userQuestion: sourcePrompt,
+              selectedLensIds: ["source-citation"],
+              customLensText: ""
+            })
+          }]
+        },
+        {
+          id: "dummy-privacy",
+          title: shortHistoryTitle(privacyPrompt),
+          date: "June, 2nd",
+          contexts: [introContext],
+          messages: [{
+            prompt: privacyPrompt,
+            result: generateMockLLMResponse({
+              selectedText: introContext,
+              userQuestion: privacyPrompt,
+              selectedLensIds: ["privacy"],
+              customLensText: ""
+            })
+          }]
+        },
+        {
+          id: "dummy-over-reliance",
+          title: shortHistoryTitle(overReliancePrompt),
+          date: "June, 1st",
+          contexts: [existingContext],
+          messages: [{
+            prompt: overReliancePrompt,
+            result: generateMockLLMResponse({
+              selectedText: existingContext,
+              userQuestion: overReliancePrompt,
+              selectedLensIds: ["over-reliance"],
+              customLensText: ""
+            })
+          }]
+        }
+      ];
+    }
+
     function loadChatSessions() {
       try {
         const saved = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || "[]");
-        return Array.isArray(saved) ? saved : [];
+        if (Array.isArray(saved) && saved.length) {
+          const normalized = saved.map(normalizeSession);
+          localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(normalized));
+          return normalized;
+        }
+        return getDefaultChatSessions().map(normalizeSession);
       } catch {
-        return [];
+        return getDefaultChatSessions().map(normalizeSession);
       }
     }
 
@@ -2846,13 +2950,16 @@ The evaluation should include diverse users and should not treat one attention p
       localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(chatSessions));
     }
 
-    function sessionTitle(messages) {
-      const latestAnswer = messages.at(-1)?.result?.mainAnswer || messages[0]?.result?.mainAnswer || "Saved review";
-      const summary = latestAnswer
+    function shortHistoryTitle(text) {
+      const summary = String(text || "Saved review")
         .replace(/\s+/g, " ")
-        .replace(/^The selected section can be improved by\s*/i, "Improve claims by ")
         .trim();
       return summary.length > 42 ? `${summary.slice(0, 42)}...` : summary;
+    }
+
+    function sessionTitle(messages) {
+      const latestPrompt = messages.at(-1)?.prompt || messages[0]?.prompt || "Saved review";
+      return shortHistoryTitle(latestPrompt);
     }
 
     function sessionDate() {
@@ -2899,11 +3006,19 @@ The evaluation should include diverse users and should not treat one attention p
       autoSizePrompt();
     }
 
+    function openNewChat() {
+      resetCurrentChat();
+      showChat("Chat Box");
+      composerShell.style.display = "flex";
+      setActive(textMode);
+      promptBox.focus();
+    }
+
     function restoreChatSession(sessionId) {
       const session = chatSessions.find(item => item.id === sessionId);
       if (!session) return;
       activeSessionId = session.id;
-      currentMessages = JSON.parse(JSON.stringify(session.messages || []));
+      currentMessages = normalizeSession(session).messages;
       contexts.splice(0, contexts.length, ...(session.contexts || []));
       renderContext();
       lastSentPrompt = currentMessages.at(-1)?.prompt || "";
@@ -2964,6 +3079,12 @@ The evaluation should include diverse users and should not treat one attention p
       showChat("Chat History");
       composerShell.style.display = "none";
       chatBody.innerHTML = "";
+      const newChatButton = document.createElement("button");
+      newChatButton.className = "start-new-chat";
+      newChatButton.type = "button";
+      newChatButton.textContent = "Start new chat";
+      newChatButton.addEventListener("click", openNewChat);
+      chatBody.appendChild(newChatButton);
       chatSessions.forEach((session) => {
         const row = document.createElement("div");
         row.className = "history-row";
@@ -2978,11 +3099,7 @@ The evaluation should include diverse users and should not treat one attention p
     compileMode.addEventListener("click", () => showPreview());
     recompileButton.addEventListener("click", () => startCompile());
     terminalMode.addEventListener("click", () => showTerminal());
-    railChat.addEventListener("click", () => {
-      showChat("Chat Box");
-      composerShell.style.display = "flex";
-      setActive(textMode);
-    });
+    railChat.addEventListener("click", openNewChat);
     railHistory.addEventListener("click", showHistory);
     closeChat.addEventListener("click", handleCloseChat);
     function applyZoom(zoom) {
